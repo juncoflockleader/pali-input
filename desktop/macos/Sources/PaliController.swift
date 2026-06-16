@@ -17,6 +17,7 @@ final class PaliController: IMKInputController {
 
     private let notFound = NSRange(location: NSNotFound, length: 0)
     private let info = InfoPanel.shared
+    private var candidates: [Completion] = []   // current completions, selectable 1–9
 
     override init!(server: IMKServer!, delegate: Any!, client inputClient: Any!) {
         super.init(server: server, delegate: delegate, client: inputClient)
@@ -68,12 +69,17 @@ final class PaliController: IMKInputController {
                 if !buffer.isEmpty { commit(client) }
                 return false
             }
+            // number-key candidate selection (Chinese-IME style): pick 1–9
+            if !buffer.isEmpty, !candidates.isEmpty, let d = c.wholeNumberValue, d >= 1, d <= candidates.count {
+                selectCandidate(client, d - 1)
+                return true
+            }
             if isInputChar(c) {
                 buffer.append(c)
                 updatePreedit(client)
                 return true
             }
-            // punctuation / digit: commit pending word, then emit the char
+            // punctuation: commit pending word, then emit the char
             if !buffer.isEmpty { commit(client) }
             client.insertText(String(c), replacementRange: notFound)
             return true
@@ -92,6 +98,7 @@ final class PaliController: IMKInputController {
     private func updatePreedit(_ client: IMKTextInput) {
         if buffer.isEmpty {
             client.setMarkedText("", selectionRange: NSRange(location: 0, length: 0), replacementRange: notFound)
+            candidates = []
             info.hide()
             return
         }
@@ -104,27 +111,39 @@ final class PaliController: IMKInputController {
         updateInfo(client, converted: text)
     }
 
-    // Show the meaning + morphological split of the word being composed.
+    // Show numbered completion candidates + the meaning / morphological split.
     private func updateInfo(_ client: IMKTextInput, converted: String) {
         guard let data = PaliData.shared else { info.hide(); return }
         let iast = PaliEngine.transliterate(buffer, script: .roman, smartNasal: smartNasal)
         let gloss = data.lookup(iast)
         let analyses = data.analyze(data.toAkk(iast), limit: 2)
-        let completions = data.completeWord(iast, limit: 6)
+        candidates = data.completeWord(iast, limit: 9)
         let compound = data.splitCompound(iast, lemma: gloss?.key)
-        if gloss == nil && analyses.isEmpty && completions.isEmpty && compound.isEmpty { info.hide(); return }
+        if gloss == nil && analyses.isEmpty && candidates.isEmpty && compound.isEmpty { info.hide(); return }
 
+        // candidate display: convert each lemma into the active script (+ gloss)
+        let candDisplay = candidates.map { c -> (label: String, en: String) in
+            (PaliEngine.transliterate(c.w, script: script, smartNasal: false), c.en)
+        }
         var rect = NSRect.zero
         _ = client.attributes(forCharacterIndex: 0, lineHeightRectangle: &rect)
         info.update(converted: converted,
                     iast: script == .roman ? nil : iast,
-                    gloss: gloss, analyses: analyses, completions: completions, compound: compound, at: rect)
+                    gloss: gloss, analyses: analyses, candidates: candDisplay, compound: compound, at: rect)
+    }
+
+    // Pick completion #index: replace the composition with that whole word.
+    private func selectCandidate(_ client: IMKTextInput, _ index: Int) {
+        guard index < candidates.count else { return }
+        buffer = candidates[index].w  // engine accepts IAST input directly
+        commit(client)
     }
 
     private func commit(_ client: IMKTextInput) {
         guard !buffer.isEmpty else { return }
         client.insertText(converted, replacementRange: notFound)
         buffer = ""
+        candidates = []
         info.hide()
     }
 

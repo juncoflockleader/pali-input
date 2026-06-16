@@ -50,13 +50,29 @@ final class InfoPanel {
 
     func hide() { panel.orderOut(nil) }
 
-    func update(converted: String, iast: String?, gloss: GlossResult?, analyses: [Analysis], completions: [Completion], compound: [String] = [], at rect: NSRect) {
+    func update(converted: String, iast: String?, gloss: GlossResult?, analyses: [Analysis],
+                candidates: [(label: String, en: String)], compound: [String] = [], at rect: NSRect) {
         let s = NSMutableAttributedString()
 
         let head = converted + (iast.map { "   " + $0 } ?? "")
         s.append(NSAttributedString(string: head, attributes: [
             .font: NSFont.systemFont(ofSize: 20, weight: .medium),
             .foregroundColor: NSColor.labelColor]))
+
+        // numbered completion candidates — press 1–9 to choose
+        if !candidates.isEmpty {
+            let line = NSMutableAttributedString()
+            for (i, c) in candidates.enumerated() {
+                line.append(NSAttributedString(string: "\(i + 1) ", attributes: [
+                    .font: NSFont.systemFont(ofSize: 15, weight: .bold),
+                    .foregroundColor: NSColor.systemOrange]))
+                line.append(NSAttributedString(string: c.label + "   ", attributes: [
+                    .font: NSFont.systemFont(ofSize: 15),
+                    .foregroundColor: NSColor.labelColor]))
+            }
+            s.append(NSAttributedString(string: "\n"))
+            s.append(line)
+        }
 
         if let g = gloss {
             let note = g.stem ? "  (\(g.key))" : ""
@@ -73,12 +89,6 @@ final class InfoPanel {
             s.append(NSAttributedString(string: "\n⊕ " + compound.joined(separator: " + "), attributes: [
                 .font: NSFont.systemFont(ofSize: 12),
                 .foregroundColor: NSColor.systemTeal]))
-        }
-        if !completions.isEmpty {
-            let words = completions.prefix(6).map { $0.w }.joined(separator: "  ")
-            s.append(NSAttributedString(string: "\n补全 " + words, attributes: [
-                .font: NSFont.systemFont(ofSize: 11),
-                .foregroundColor: NSColor.tertiaryLabelColor]))
         }
         label.attributedStringValue = s
 
