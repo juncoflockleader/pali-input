@@ -1,0 +1,9 @@
+# OS / editor cruft
+.DS_Store
+*.log
+
+# Node (none committed today, but future-proof)
+node_modules/
+
+# Local scratch / preview artifacts
+_*.html

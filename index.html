@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>巴利语拼音输入法 · Pali Phonetic IME</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari&family=Noto+Sans+Sinhala&family=Noto+Sans+Thai&family=Noto+Sans+Myanmar&family=Noto+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <h1>巴利语拼音输入法</h1>
+      <p class="subtitle">Pali Phonetic Input Method — 输入发音，输出巴利文</p>
+    </header>
+
+    <div class="columns">
+      <div class="col col-left">
+
+    <section class="panel">
+      <div class="io-head">
+        <label for="input">输入发音 (Type the sound)</label>
+        <div class="controls">
+          <label class="toggle" title="自动纠正鼻音：n 随后随的塞音同化（sangha → saṅgha），词尾 m → ṃ（buddham → buddhaṃ）">
+            <input type="checkbox" id="smartNasal" checked />
+            <span>智能纠正</span>
+          </label>
+          <button id="clearBtn" class="ghost" type="button">清空</button>
+        </div>
+      </div>
+      <textarea id="input" rows="2" spellcheck="false" autocomplete="off"
+        placeholder="buddha.m sara.na.m gacchaami"></textarea>
+
+      <p class="corrections" id="corrections" hidden></p>
+
+      <div class="examples" id="examples">
+        <span class="ex-label">示例：</span>
+      </div>
+    </section>
+
+    <section class="panel predict">
+      <div class="predict-head">构词提示 · Roots &amp; next sounds
+        <span class="ph-sub">根据正在输入的词预测</span>
+      </div>
+      <div class="pred-block">
+        <div class="pred-label">拆分 · Analysis <span class="dim">前缀 + 词根/词 + 词尾</span></div>
+        <div id="analysis" class="analysis"></div>
+      </div>
+      <div class="pred-block">
+        <div class="pred-label">下一个音 · Next sound <span class="dim">（点选追加）</span></div>
+        <div id="nextSounds" class="next-sounds"></div>
+      </div>
+      <div class="pred-cols">
+        <div class="pred-block">
+          <div class="pred-label">可能的词根 · √dhātu</div>
+          <div id="rootHints" class="hint-list"></div>
+        </div>
+        <div class="pred-block">
+          <div class="pred-label">可能的前缀 · upasagga</div>
+          <div id="affixHints" class="hint-list"></div>
+        </div>
+      </div>
+    </section>
+
+      </div><!-- /col-left -->
+
+      <div class="col col-right">
+
+    <section class="panel">
+      <div class="tabs" id="tabs" role="tablist"></div>
+
+      <div class="output-wrap">
+        <div id="output" class="output" lang="" aria-live="polite"></div>
+        <button id="copyBtn" class="copy" type="button" title="复制">复制</button>
+      </div>
+      <p class="hint" id="scriptHint"></p>
+    </section>
+
+    <section class="panel gloss">
+      <div class="gloss-head">逐词释义 · Word meanings <span class="en-zh">EN · 中文</span></div>
+      <div id="phraseTrans" class="phrase-trans" hidden></div>
+      <div id="glossary" class="gloss-list"></div>
+    </section>
+
+      </div><!-- /col-right -->
+    </div><!-- /columns -->
+
+    <details class="panel reference">
+      <summary>输入对照表 · Input scheme</summary>
+      <div class="ref-body" id="refBody"></div>
+    </details>
+
+    <footer class="foot">
+      <p>纯发音转写引擎 · 离线可用 · 巴利文支持 IAST / देवनागरी / සිංහල / ไทย / မြန်မာ</p>
+      <p class="note">提示：长元音用双写（aa ī uu），卷舌音加点（.t .d .n .l），鼻音 ṃ 用 <code>.m</code>，ṅ 用 <code>"n</code>，ñ 用 <code>~n</code>。</p>
+    </footer>
+  </main>
+
+  <script src="pali.js"></script>
+  <script src="glossary.js"></script>
+  <script src="roots.data.js"></script>
+  <script src="roots.js"></script>
+  <script src="predict.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
