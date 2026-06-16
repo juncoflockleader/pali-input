@@ -329,6 +329,17 @@ textarea#input:focus {
 .g-zh { color: var(--ink); font-size: 15px; }
 .g-row.unknown { opacity: .45; }
 .g-empty { color: #c9bca6; font-size: 14px; padding: 6px 2px; }
+.gloss-note {
+  margin: 12px 2px 0;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.gloss-note a { color: var(--accent); }
+.gloss-note strong { color: var(--accent); font-weight: 600; }
+.gloss-note .en { opacity: .75; font-style: italic; }
 
 @media (max-width: 520px) {
   .g-row { grid-template-columns: 1fr; gap: 1px; padding: 9px 2px; }
