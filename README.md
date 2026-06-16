@@ -3,6 +3,8 @@
 输入发音（ASCII 罗马拼写），输出巴利文。
 Type the **pronunciation** of Pali in plain ASCII and get proper Pali script.
 
+**🌐 在线试用 · Live demo: https://juncoflockleader.github.io/pali-input/**
+
 巴利语本身没有专属文字，历来用多种文字书写。本工具把易输入的拉丁拼写实时
 转写为：
 
