@@ -40,6 +40,10 @@ function buildRules(scriptId) {
   const vi = (i) => t.vowelIndep[i];
   const vs = (i) => t.vowelSign[i];
   const vir = t.stacker, anus = t.anusvara;
+  // Myanmar kinzi: ṅ as the first cluster member = nga + asat + virama. Returns
+  // the stack tokens to put between ṅ and the following consonant glyph.
+  const kinzi = t.kinzi || {};
+  const ngStack = kinzi['ṅ'] ? [cg('ṅ'), t.killer, vir] : [cg('ṅ'), vir];
 
   const consGlyphs = Object.keys(t.cons).map((i) => t.cons[i]);
   const stores = {
@@ -58,7 +62,14 @@ function buildRules(scriptId) {
   rule([A('ASP')], 'h', [IDX('ASPH')]);
 
   // 2. smart nasal: n + velar/palatal/labial stop -> homorganic nasal cluster
-  for (const k of Object.keys(SMART)) rule([cg('n')], k, [cg(SMART[k]), vir, cg(k)]);
+  //    (ṅ before a velar takes the Myanmar kinzi stack)
+  for (const k of Object.keys(SMART)) {
+    const out = SMART[k] === 'ṅ' ? [...ngStack, cg(k)] : [cg(SMART[k]), vir, cg(k)];
+    rule([cg('n')], k, out);
+  }
+  // 2b. explicit ṅ (from "n / ;n) before a velar -> kinzi cluster (Myanmar);
+  //     overrides the generic cluster rule below.
+  if (kinzi['ṅ']) for (const k of ['k', 'g']) rule([cg('ṅ')], k, [...ngStack, cg(k)]);
   // 3. smart retroflex: n + (dot)t/d/n/l -> ṇ + retroflex cluster
   for (const k of Object.keys(DOT_CONS)) rule([cg('n'), DK('dot')], k, [cg(SMART_RETRO), vir, cg(DOT_CONS[k])]);
 

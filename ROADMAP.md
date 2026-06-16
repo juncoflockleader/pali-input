@@ -42,7 +42,8 @@ roughly prioritized. Checked = shipped.
 
 - [ ] Chinese coverage beyond the 169 curated words (no good open CN–Pali
       source; expand by hand or partner data).
-- [ ] Myanmar *kinzi* (ṅ-cluster) is an approximation — refine.
+- [x] Myanmar *kinzi* (ṅ as first cluster member → nga + asat + virama, e.g.
+      saṅgha → သင်္ဃ). All engines + the Keyman Myanmar keyboard.
 - [ ] Sandhi (word-boundary sound changes) — advanced.
 
 ## C. Web / UX polish

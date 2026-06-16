@@ -18,6 +18,7 @@ private class Abugida(
     val stacker: String,
     val killer: String,
     val anusvara: String,
+    val kinzi: Set<String> = emptySet(),        // Myanmar: ṅ → kinzi when non-final cluster member
 )
 
 object PaliEngine {
@@ -127,7 +128,12 @@ object PaliEngine {
 
         fun flushWithVowel(vowel: String) {
             val sb = StringBuilder()
-            for (k in 0 until run.size - 1) sb.append(m.cons[run[k]] ?: "").append(m.stacker)
+            for (k in 0 until run.size - 1) {
+                val c = run[k]
+                // Myanmar kinzi: ṅ as a non-final cluster member = nga + asat + virama
+                if (c in m.kinzi) sb.append(m.cons[c] ?: "").append(m.killer).append(m.stacker)
+                else sb.append(m.cons[c] ?: "").append(m.stacker)
+            }
             val last = run[run.size - 1]
             val lv = m.leadingVowels?.get(vowel)
             if (lv != null) sb.append(lv).append(m.cons[last] ?: "")
@@ -207,5 +213,5 @@ object PaliEngine {
             "y" to "ယ", "r" to "ရ", "l" to "လ", "ḷ" to "ဠ", "v" to "ဝ", "s" to "သ", "h" to "ဟ"),
         vowelIndep = mapOf("a" to "အ", "ā" to "အာ", "i" to "ဣ", "ī" to "ဤ", "u" to "ဥ", "ū" to "ဦ", "e" to "ဧ", "o" to "ဩ"),
         vowelSign = mapOf("a" to "", "ā" to "ာ", "i" to "ိ", "ī" to "ီ", "u" to "ု", "ū" to "ူ", "e" to "ေ", "o" to "ော"),
-        leadingVowels = null, stacker = "္", killer = "်", anusvara = "ံ")
+        leadingVowels = null, stacker = "္", killer = "်", anusvara = "ံ", kinzi = setOf("ṅ"))
 }

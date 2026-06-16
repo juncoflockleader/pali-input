@@ -28,6 +28,7 @@ struct AbugidaTable {
     let stacker: String
     let killer: String
     let anusvara: String
+    var kinzi: Set<String> = []            // Myanmar: ṅ → kinzi when non-final cluster member
 }
 
 enum PaliEngine {
@@ -149,7 +150,11 @@ enum PaliEngine {
         func flushWithVowel(_ vowel: String) {
             var s = ""
             if run.count > 1 {
-                for k in 0..<(run.count - 1) { s += (m.cons[run[k]] ?? "") + m.stacker }
+                for k in 0..<(run.count - 1) {
+                    let c = run[k]
+                    // Myanmar kinzi: ṅ as a non-final cluster member = nga + asat + virama
+                    s += m.kinzi.contains(c) ? (m.cons[c] ?? "") + m.killer + m.stacker : (m.cons[c] ?? "") + m.stacker
+                }
             }
             let last = run[run.count - 1]
             if let lv = m.leadingVowels?[vowel] {
@@ -246,5 +251,5 @@ enum PaliEngine {
         ],
         vowelIndep: ["a": "အ", "ā": "အာ", "i": "ဣ", "ī": "ဤ", "u": "ဥ", "ū": "ဦ", "e": "ဧ", "o": "ဩ"],
         vowelSign: ["a": "", "ā": "ာ", "i": "ိ", "ī": "ီ", "u": "ု", "ū": "ူ", "e": "ေ", "o": "ော"],
-        leadingVowels: nil, stacker: "္", killer: "်", anusvara: "ံ")
+        leadingVowels: nil, stacker: "္", killer: "်", anusvara: "ံ", kinzi: ["ṅ"])
 }

@@ -52,9 +52,11 @@ fun main() {
     eq("mettaa", PaliScript.THAI, "เมตฺตา")
     eq("araha.m", PaliScript.THAI, "อรหํ")
 
-    // Myanmar
+    // Myanmar (incl. kinzi)
     eq("buddha", PaliScript.MYANMAR, "ဗုဒ္ဓ")
     eq("mettaa", PaliScript.MYANMAR, "မေတ္တာ")
+    eq("sangha", PaliScript.MYANMAR, "သင်္ဃ")       // kinzi: ṅ + gh
+    eq("sankhaaraa", PaliScript.MYANMAR, "သင်္ခာရာ")  // kinzi: ṅ + kh
 
     println("\n$pass passed, $fail failed")
     exitProcess(if (fail == 0) 0 else 1)

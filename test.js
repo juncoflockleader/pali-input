@@ -88,12 +88,14 @@ eq('bhikkhu', 'thai', 'ภิกฺขุ');
 eq('mettaa', 'thai', 'เมตฺตา');
 eq('araha.m', 'thai', 'อรหํ');
 
-// --- Myanmar (kinzi clusters not handled; non-kinzi words verified) ---------
+// --- Myanmar (incl. kinzi for ṅ-clusters) -----------------------------------
 eq('buddha', 'myanmar', 'ဗုဒ္ဓ');
 eq('dhamma', 'myanmar', 'ဓမ္မ');
 eq('nibbaana', 'myanmar', 'နိဗ္ဗာန');
 eq('bhikkhu', 'myanmar', 'ဘိက္ခု');
 eq('mettaa', 'myanmar', 'မေတ္တာ');
+eq('sangha', 'myanmar', 'သင်္ဃ');     // kinzi: ṅ + gh
+eq('sankhaaraa', 'myanmar', 'သင်္ခာရာ'); // kinzi: ṅ + kh
 
 // --- Tokenizer sanity -------------------------------------------------------
 {

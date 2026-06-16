@@ -52,9 +52,11 @@ struct EngineTests {
         eq("mettaa", .thai, "เมตฺตา")
         eq("araha.m", .thai, "อรหํ")
 
-        // Myanmar (stacked clusters)
+        // Myanmar (stacked clusters + kinzi)
         eq("buddha", .myanmar, "ဗုဒ္ဓ")
         eq("mettaa", .myanmar, "မေတ္တာ")
+        eq("sangha", .myanmar, "သင်္ဃ")      // kinzi: ṅ + gh
+        eq("sankhaaraa", .myanmar, "သင်္ခာရာ")  // kinzi: ṅ + kh
 
         // --- PaliData: glossary lookup + morphological analysis ---
         if let pd = PaliData(url: URL(fileURLWithPath: "Resources/pali-data.json"),

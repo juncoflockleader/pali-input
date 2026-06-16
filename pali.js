@@ -163,7 +163,11 @@
 
     const flushWithVowel = (vowel) => {
       let s = '';
-      for (let k = 0; k < run.length - 1; k++) s += m.cons[run[k]] + m.stacker;
+      for (let k = 0; k < run.length - 1; k++) {
+        const c = run[k];
+        // Myanmar kinzi: ṅ as a non-final cluster member = nga + asat + virama
+        s += (m.kinzi && m.kinzi[c]) ? m.cons[c] + m.killer + m.stacker : m.cons[c] + m.stacker;
+      }
       const last = run[run.length - 1];
       if (m.leadingVowels && m.leadingVowels[vowel] !== undefined) {
         s += m.leadingVowels[vowel] + m.cons[last];
@@ -257,6 +261,7 @@
     vowelIndep: { a: 'အ', ā: 'အာ', i: 'ဣ', ī: 'ဤ', u: 'ဥ', ū: 'ဦ', e: 'ဧ', o: 'ဩ' },
     vowelSign: { a: '', ā: 'ာ', i: 'ိ', ī: 'ီ', u: 'ု', ū: 'ူ', e: 'ေ', o: 'ော' },
     stacker: '္', killer: '်', anusvara: 'ံ', // virama (stacker), asat, anusvara
+    kinzi: { ṅ: true }, // ṅ before a consonant → kinzi (nga + asat + virama)
   };
 
   // -------------------------------------------------------------------------
