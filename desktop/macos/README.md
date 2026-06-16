@@ -9,8 +9,19 @@ While you compose, a small floating **info panel** appears beside the caret
 showing the same hints as the web app: the word's English/Chinese **gloss**
 and a **morphological split** (prefix + root/word + ending) — e.g. typing
 `anugacchati` shows `anu- √gam -ti` with “to go”. It's informational only
-(never takes focus). The data (169 glosses, 685 roots) is bundled as
-`Resources/pali-data.json`, generated from the web app by `tools/gen-data.cjs`.
+(never takes focus).
+
+Bundled data:
+- `Resources/pali-data.json` — 169 curated **bilingual** glosses + 685 roots +
+  affixes (from the web app, via `tools/gen-data.cjs`). Used for the
+  morphological split and preferred for glosses (has 中文).
+- `Resources/dpd-dict.json` — the **full Digital Pāḷi Dictionary** (~75,600
+  lemmas, English) compacted to `lemma → meaning` (4 MB), via
+  `tools/gen-dpd-dict.cjs`. Used as the gloss fallback so almost any Pali word
+  you type gets a meaning.
+
+Gloss priority: curated bilingual → DPD English → (else) the morphological
+split’s stem gloss. Data: DPD is CC BY-NC-SA, English only.
 
 ## Requirements
 
@@ -48,7 +59,9 @@ Sources/
   PaliEngineTest.swift   35 assertions vs. the JS engine + glossary/analysis
   main.swift             IMKServer bootstrap
 Resources/pali-data.json glossary + roots (generated; bundled into the .app)
+Resources/dpd-dict.json  full DPD dictionary, lemma->meaning (~75.6k, 4 MB)
 tools/gen-data.cjs       regenerates pali-data.json from the web app's data
+tools/gen-dpd-dict.cjs   regenerates dpd-dict.json from the DPD headword TSVs
 Info.plist               IMK input-method registration
 build.sh                 (regen data) + compile + assemble + (optionally) install
 ```

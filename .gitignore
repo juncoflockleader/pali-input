@@ -13,3 +13,6 @@ desktop/macos/build/
 *.kmx
 *.kmp
 *.js.map
+
+# Large DPD headword source TSVs (~108MB cache; compact dpd-dict.json committed)
+desktop/macos/tools/dpd_cache/

@@ -38,8 +38,10 @@ swiftc -O \
 cp Info.plist "$APP/Contents/Info.plist"
 plutil -lint "$APP/Contents/Info.plist" >/dev/null
 
-# Bundle the glossary / root data so the info panel can look words up.
+# Bundle the glossary / root data + full DPD dictionary so the info panel can
+# look words up.
 cp Resources/pali-data.json "$RES/"
+cp Resources/dpd-dict.json "$RES/"
 
 # Ad-hoc codesign so the bundle loads on the local machine.
 codesign --force --sign - "$APP" 2>/dev/null || echo "  (codesign skipped)"

@@ -36,19 +36,27 @@ struct Analysis {
 final class PaliData {
     static let shared: PaliData? = {
         guard let url = Bundle.main.url(forResource: "pali-data", withExtension: "json") else { return nil }
-        return PaliData(url: url)
+        let dpdURL = Bundle.main.url(forResource: "dpd-dict", withExtension: "json")
+        return PaliData(url: url, dpdURL: dpdURL)
     }()
 
     private let data: Bundled
+    private let dpd: [String: String]   // full DPD lemma -> English meaning (75k+)
     private let rootForms: [(root: Root, forms: [(form: String, akk: [String])])]
     private let prefixesAll: [(aff: Affix, akk: [String])]
     private let endingsSorted: [(end: Ending, akk: [String])]
     private let glossAkk: [(w: String, akk: [String], en: String, zh: String)]
 
-    init?(url: URL) {
+    init?(url: URL, dpdURL: URL? = nil) {
         guard let raw = try? Data(contentsOf: url),
               let d = try? JSONDecoder().decode(Bundled.self, from: raw) else { return nil }
         data = d
+        if let du = dpdURL, let draw = try? Data(contentsOf: du),
+           let dd = try? JSONDecoder().decode([String: String].self, from: draw) {
+            dpd = dd
+        } else {
+            dpd = [:]
+        }
         func toA(_ s: String) -> [String] {
             PaliEngine.tokenize(s, smartNasal: false).filter { $0.type != .other }.map { $0.iast }
         }
@@ -86,10 +94,17 @@ final class PaliData {
     // MARK: glossary lookup (exact, then strip a trailing ṃ/m)
     func lookup(_ iastWord: String) -> GlossResult? {
         let k = iastWord.lowercased()
+        // 1) curated bilingual glossary (exact, then strip a trailing ṃ/m)
         if let g = data.glossary[k] { return GlossResult(en: g.en, zh: g.zh, key: k, stem: false) }
         if let last = k.last, last == "ṃ" || last == "m" {
             let k2 = String(k.dropLast())
             if let g = data.glossary[k2] { return GlossResult(en: g.en, zh: g.zh, key: k2, stem: true) }
+        }
+        // 2) full DPD dictionary (English only)
+        if let m = dpd[k] { return GlossResult(en: m, zh: "", key: k, stem: false) }
+        if let last = k.last, last == "ṃ" || last == "m" {
+            let k2 = String(k.dropLast())
+            if let m = dpd[k2] { return GlossResult(en: m, zh: "", key: k2, stem: true) }
         }
         return nil
     }
@@ -102,6 +117,13 @@ final class PaliData {
         for g in glossAkk where g.akk.count > stem.count && g.akk.count - stem.count <= 1 && startsWith(g.akk, stem) {
             return StemMatch(kind: "word", label: g.w, en: g.en, zh: g.zh)
         }
+        return nil
+    }
+    // Last resort: the full DPD dictionary (exact stem, English only). Tried
+    // after roots so the morphological panel prefers the more informative √root.
+    private func matchStemDpd(_ stem: [String]) -> StemMatch? {
+        let key = stem.joined()
+        if let m = dpd[key] { return StemMatch(kind: "word", label: key, en: m, zh: "") }
         return nil
     }
     private func matchStemRoot(_ stem: [String]) -> StemMatch? {
@@ -138,7 +160,7 @@ final class PaliData {
             }
             for eo in endOpts {
                 if eo.stem.isEmpty { continue }
-                let match = matchStemWord(eo.stem) ?? matchStemRoot(eo.stem)
+                let match = matchStemWord(eo.stem) ?? matchStemRoot(eo.stem) ?? matchStemDpd(eo.stem)
                 let stem = match ?? StemMatch(kind: "raw", label: eo.stem.joined(), en: "", zh: "")
                 let pfxLen = akk.count - po.rest.count
                 let endLen = po.rest.count - eo.stem.count

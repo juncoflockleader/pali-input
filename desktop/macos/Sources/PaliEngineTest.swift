@@ -57,13 +57,24 @@ struct EngineTests {
         eq("mettaa", .myanmar, "မေတ္တာ")
 
         // --- PaliData: glossary lookup + morphological analysis ---
-        if let pd = PaliData(url: URL(fileURLWithPath: "Resources/pali-data.json")) {
+        if let pd = PaliData(url: URL(fileURLWithPath: "Resources/pali-data.json"),
+                             dpdURL: URL(fileURLWithPath: "Resources/dpd-dict.json")) {
             func gloss(_ w: String, _ zh: String) {
                 if pd.lookup(w)?.zh == zh { pass += 1 } else { fail += 1; print("FAIL gloss \(w) -> \(pd.lookup(w)?.zh ?? "nil")") }
             }
             gloss("buddha", "佛；觉者")
             gloss("mettā", "慈；慈爱")
             if let r = pd.lookup("buddhaṃ"), r.stem, r.key == "buddha" { pass += 1 } else { fail += 1; print("FAIL stem buddhaṃ") }
+
+            // full DPD dictionary: words NOT in the curated glossary still resolve (English)
+            func dpdHas(_ w: String) {
+                let r = pd.lookup(w)
+                if let r = r, !r.en.isEmpty { pass += 1 } else { fail += 1; print("FAIL dpd lookup \(w)") }
+            }
+            dpdHas("rukkha")   // tree — not in the 169 curated; from DPD
+            dpdHas("udaka")    // water
+            dpdHas("ākāsa")    // space
+            dpdHas("pabbata")  // mountain
 
             func hasA(_ w: String, _ pred: (Analysis) -> Bool, _ msg: String) {
                 let a = pd.analyze(pd.toAkk(w), limit: 3)

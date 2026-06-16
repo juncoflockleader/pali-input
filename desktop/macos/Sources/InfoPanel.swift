@@ -60,7 +60,8 @@ final class InfoPanel {
 
         if let g = gloss {
             let note = g.stem ? "  (\(g.key))" : ""
-            s.append(NSAttributedString(string: "\n\(g.en) · \(g.zh)\(note)", attributes: [
+            let zhPart = g.zh.isEmpty ? "" : " · \(g.zh)"
+            s.append(NSAttributedString(string: "\n\(g.en)\(zhPart)\(note)", attributes: [
                 .font: NSFont.systemFont(ofSize: 12),
                 .foregroundColor: NSColor.secondaryLabelColor]))
         }
