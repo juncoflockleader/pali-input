@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  web:
+    name: Web + Keyman (Node)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Engine + glossary + prediction tests
+        run: node test.js
+      - name: Keyman keyboards — regenerate & verify (simulator)
+        run: node desktop/keyman/build-native.cjs
+      - name: Committed Keyman keyboards are up to date
+        run: git diff --exit-code -- desktop/keyman/*.kmn
+
+  swift:
+    name: Swift engine/data + iOS type-check (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Engine + glossary + analysis + completion tests
+        working-directory: desktop/macos
+        run: |
+          swiftc -parse-as-library \
+            Sources/PaliEngine.swift Sources/PaliData.swift Sources/PaliEngineTest.swift \
+            -o palitest
+          ./palitest
+      - name: Build the macOS input method bundle
+        working-directory: desktop/macos
+        run: ./build.sh
+      - name: iOS sources type-check (iOS SDK)
+        working-directory: desktop/ios
+        run: bash build-check.sh
+
+  kotlin:
+    name: Kotlin engine/analyzer + Android type-check (Ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Install Kotlin compiler
+        run: |
+          curl -sSL -o /tmp/kotlin.zip \
+            https://github.com/JetBrains/kotlin/releases/download/v2.0.21/kotlin-compiler-2.0.21.zip
+          unzip -q /tmp/kotlin.zip -d /opt
+          echo "/opt/kotlinc/bin" >> "$GITHUB_PATH"
+      - name: Fetch org.json (runtime dep for the data test)
+        run: curl -sSL -o /tmp/json.jar https://repo1.maven.org/maven2/org/json/json/20240303/json-20240303.jar
+      - name: Engine test (JVM)
+        working-directory: desktop/android
+        run: |
+          kotlinc app/src/main/java/org/pali/ime/PaliEngine.kt test/PaliEngineTest.kt -include-runtime -d /tmp/engine.jar
+          java -jar /tmp/engine.jar
+      - name: Glossary + analysis + completion test (JVM)
+        working-directory: desktop/android
+        run: |
+          kotlinc -classpath /tmp/json.jar \
+            app/src/main/java/org/pali/ime/PaliEngine.kt \
+            app/src/main/java/org/pali/ime/PaliData.kt \
+            test/PaliDataTest.kt -include-runtime -d /tmp/data.jar
+          java -cp /tmp/data.jar:/tmp/json.jar PaliDataTestKt
+      - name: Android API type-check (vs android.jar)
+        working-directory: desktop/android
+        run: |
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          ANDROID_JAR=$(find "$SDK/platforms" -name android.jar 2>/dev/null | sort | tail -1)
+          if [ -n "$ANDROID_JAR" ]; then
+            echo "Using $ANDROID_JAR"
+            kotlinc -classpath "$ANDROID_JAR" app/src/main/java/org/pali/ime/*.kt -d /tmp/androidcheck.jar
+          else
+            echo "::warning::no android.jar found; skipping Android API type-check"
+          fi

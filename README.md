@@ -3,6 +3,8 @@
 输入发音（ASCII 罗马拼写），输出巴利文。
 Type the **pronunciation** of Pali in plain ASCII and get proper Pali script.
 
+[![CI](https://github.com/juncoflockleader/pali-input/actions/workflows/ci.yml/badge.svg)](https://github.com/juncoflockleader/pali-input/actions/workflows/ci.yml)
+
 **🌐 在线试用 · Live demo: https://juncoflockleader.github.io/pali-input/**
 （可「安装」为 PWA，离线可用；会记住所选文字与智能纠正设置）
 
