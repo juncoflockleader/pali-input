@@ -21,7 +21,11 @@ Type the **pronunciation** of Pali in plain ASCII and get proper Pali script.
 
 - **macOS**(原生 InputMethodKit / Swift):`cd desktop/macos && ./build.sh install`
   → 在「系统设置 → 键盘 → 输入法」启用「Pali」。引擎是 `pali.js` 的忠实 Swift 移植
-  (28 项测试逐字对齐),菜单可切 5 种文字。
+  (28 项测试逐字对齐),菜单可切 5 种文字,光标旁有词义/词根浮窗 + 完整 DPD 词典。
+- **iOS / iPadOS**(原生键盘扩展 / Swift):复用同一引擎,用 Xcode 建工程打包;见
+  [`desktop/ios/`](desktop/ios/)。
+- **Android**(原生 InputMethodService / Kotlin):引擎移植到 Kotlin(28 项 JVM 测试通过),
+  Android Studio 打开 [`desktop/android/`](desktop/android/) 构建。
 - **Windows 等**([Keyman](https://keyman.com)):5 个键盘源码(IAST + 天城/僧伽罗/
   泰/缅 4 种原生文字,后者由生成器从引擎字表生成并经规则模拟器逐字校验),用
   Keyman Developer 编译即得 Windows/macOS/Linux/web/移动端安装包。见

@@ -8,8 +8,13 @@
 
 | 目录 | 平台 | 框架 | 状态 |
 |------|------|------|------|
-| [`macos/`](macos/) | macOS | InputMethodKit (Swift) | ✅ 可在 Mac 上编译出可安装的 `.app` |
-| [`keyman/`](keyman/) | Windows / macOS / Linux / web / 移动端 | [Keyman](https://keyman.com)(`.kmn`) | 5 个键盘源码就绪(IAST + 4 原生文字,已模拟器校验),用 Keyman Developer 编译 |
+| [`macos/`](macos/) | macOS | InputMethodKit (Swift) | ✅ 可在 Mac 上编译出可安装的 `.app`;含词义/词根浮窗 + 完整 DPD 词典 |
+| [`ios/`](ios/) | iOS / iPadOS | Keyboard Extension (Swift) | ✅ 复用引擎,已对 iOS SDK 类型检查;用 Xcode 建工程打包 |
+| [`android/`](android/) | Android | InputMethodService (Kotlin) | ✅ Kotlin 引擎移植(28 项 JVM 测试通过),全部对 android.jar 类型检查;用 Android Studio 构建 |
+| [`keyman/`](keyman/) | Windows / Linux / web / 移动端 | [Keyman](https://keyman.com)(`.kmn`) | 5 个键盘源码就绪(IAST + 4 原生文字,已模拟器校验),用 Keyman Developer 编译 |
+
+移动端两条路线并存:**原生**(ios/ + android/,体验最佳、可带词义栏)与 **Keyman**
+(一套 `.kmn` 也能出 iOS/Android 安装包,装在 Keyman app 内)。
 
 两者共享同一套 **Velthuis → 巴利文** 方案(和网页版一致):长元音双写(`aa→ā`)、
 卷舌音加点(`.t→ṭ`)、`.m→ṃ`、`"n→ṅ`、`~n→ñ`、智能鼻音同化、词尾 `m→ṃ`。
