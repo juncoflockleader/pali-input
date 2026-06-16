@@ -13,7 +13,7 @@ final class InfoPanel {
     private let candidateLabel = NSTextField(labelWithString: "")  // single line, no wrap
     private let infoLabel = NSTextField(labelWithString: "")       // gloss/analysis, wraps
     private let stack = NSStackView()
-    private let maxWidth: CGFloat = 460
+    private let maxWidth: CGFloat = 760   // cap; the candidate row drives actual width
 
     private init() {
         panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 220, height: 50),
@@ -37,7 +37,6 @@ final class InfoPanel {
 
         candidateLabel.lineBreakMode = .byTruncatingTail
         candidateLabel.maximumNumberOfLines = 1
-        candidateLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         infoLabel.lineBreakMode = .byWordWrapping
         infoLabel.maximumNumberOfLines = 0
         infoLabel.preferredMaxLayoutWidth = maxWidth - 24
@@ -111,11 +110,17 @@ final class InfoPanel {
         infoLabel.attributedStringValue = s
 
         // --- size & place ---
-        infoLabel.preferredMaxLayoutWidth = maxWidth - 24
+        // The candidate row is one line and must not clip: size the panel to its
+        // natural width (capped), then wrap the info block within that width.
+        let candNat = candidateLabel.isHidden ? NSSize.zero : candidateLabel.attributedStringValue.size()
+        let candW = ceil(candNat.width)
+        let contentW = min(maxWidth, max(candW, 220))
+        infoLabel.preferredMaxLayoutWidth = contentW
         stack.layoutSubtreeIfNeeded()
-        let fit = stack.fittingSize
-        let w = min(maxWidth, fit.width + 24)
-        let h = fit.height + 18
+        let infoFit = infoLabel.fittingSize
+        let w = ceil(max(contentW, infoFit.width)) + 24
+        let candH = candidateLabel.isHidden ? 0 : ceil(candNat.height) + 5
+        let h = candH + ceil(infoFit.height) + 18
         panel.setContentSize(NSSize(width: w, height: h))
         panel.setFrameTopLeftPoint(NSPoint(x: rect.minX, y: rect.minY - 3))
         panel.orderFront(nil)
