@@ -56,9 +56,16 @@ jobs:
             https://github.com/JetBrains/kotlin/releases/download/v2.0.21/kotlin-compiler-2.0.21.zip
           unzip -q /tmp/kotlin.zip -d /opt
           echo "/opt/kotlinc/bin" >> "$GITHUB_PATH"
-      - name: Fetch org.json (runtime dep for the data test)
+      - name: Fetch org.json (compile + runtime dep for the data test)
         run: curl -sSL -o /tmp/json.jar https://repo1.maven.org/maven2/org/json/json/20240303/json-20240303.jar
-      - name: Engine test (JVM)
+      - name: Locate android.jar (PaliData references android.content.Context)
+        run: |
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          JAR=$(find "$SDK/platforms" -name android.jar 2>/dev/null | sort | tail -1)
+          test -n "$JAR" || { echo "android.jar not found under $SDK/platforms"; exit 1; }
+          echo "ANDROID_JAR=$JAR" >> "$GITHUB_ENV"
+          echo "found $JAR"
+      - name: Engine test (JVM, pure Kotlin)
         working-directory: desktop/android
         run: |
           kotlinc app/src/main/java/org/pali/ime/PaliEngine.kt test/PaliEngineTest.kt -include-runtime -d /tmp/engine.jar
@@ -66,19 +73,13 @@ jobs:
       - name: Glossary + analysis + completion test (JVM)
         working-directory: desktop/android
         run: |
-          kotlinc -classpath /tmp/json.jar \
+          # compile against android.jar (for Context) + org.json; run without
+          # android.jar (the test path never touches Context)
+          kotlinc -classpath "$ANDROID_JAR:/tmp/json.jar" \
             app/src/main/java/org/pali/ime/PaliEngine.kt \
             app/src/main/java/org/pali/ime/PaliData.kt \
             test/PaliDataTest.kt -include-runtime -d /tmp/data.jar
           java -cp /tmp/data.jar:/tmp/json.jar PaliDataTestKt
-      - name: Android API type-check (vs android.jar)
+      - name: Android API type-check (full service vs android.jar)
         working-directory: desktop/android
-        run: |
-          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
-          ANDROID_JAR=$(find "$SDK/platforms" -name android.jar 2>/dev/null | sort | tail -1)
-          if [ -n "$ANDROID_JAR" ]; then
-            echo "Using $ANDROID_JAR"
-            kotlinc -classpath "$ANDROID_JAR" app/src/main/java/org/pali/ime/*.kt -d /tmp/androidcheck.jar
-          else
-            echo "::warning::no android.jar found; skipping Android API type-check"
-          fi
+        run: kotlinc -classpath "$ANDROID_JAR" app/src/main/java/org/pali/ime/*.kt -d /tmp/androidcheck.jar
