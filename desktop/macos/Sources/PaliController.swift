@@ -24,6 +24,7 @@ final class PaliController: IMKInputController {
     private var candidatePage = 0               // current page (paged with -/=)
     private let pageSize = 5                     // candidates per line/page
     private var lastCaretRect = NSRect.zero      // caret position from last compose
+    private var nextWordHead = ""                // IAST of the word predictions follow
 
     override init!(server: IMKServer!, delegate: Any!, client inputClient: Any!) {
         super.init(server: server, delegate: delegate, client: inputClient)
@@ -161,35 +162,42 @@ final class PaliController: IMKInputController {
     }
 
     // MARK: next-word prediction
-    // Shown after a word is committed: the bigram model's likely successors,
-    // numbered like completions. Picking one inserts it + a space and chains.
+    // Shown after a word is committed or picked: the word itself + its gloss,
+    // plus the bigram model's likely successors (numbered like completions).
+    // Picking a successor inserts it + a space and chains the prediction.
     private func showNextWord(_ client: IMKTextInput, after word: String) {
-        guard let data = PaliData.shared else { return }
+        guard let data = PaliData.shared else { info.hide(); return }
+        nextWordHead = word
         candidates = data.nextWord(word)
         candidatePage = 0
-        if candidates.isEmpty { info.hide(); return }
-        renderCandidatesOnly(client)
+        renderNextWord(client)
     }
 
-    // Render the current `candidates` as a bare candidate row (no headword /
-    // gloss block), anchored at the last known caret position.
-    private func renderCandidatesOnly(_ client: IMKTextInput) {
+    // Render the just-entered word (`nextWordHead`) with its translation, and
+    // its predicted successors as the candidate row, anchored at the caret.
+    private func renderNextWord(_ client: IMKTextInput) {
+        guard let data = PaliData.shared, !nextWordHead.isEmpty else { info.hide(); return }
+        let gloss = data.lookup(nextWordHead)
         let pageCount = max(1, (candidates.count + pageSize - 1) / pageSize)
-        if candidatePage >= pageCount { candidatePage = pageCount - 1 }
+        if candidatePage >= pageCount { candidatePage = max(0, pageCount - 1) }
         let start = candidatePage * pageSize
-        let pageItems = Array(candidates[start..<min(start + pageSize, candidates.count)])
+        let pageItems = candidates.isEmpty ? []
+            : Array(candidates[start..<min(start + pageSize, candidates.count)])
         let candDisplay = pageItems.map { c -> (label: String, en: String) in
             (PaliEngine.transliterate(c.w, script: script, smartNasal: false), c.en)
         }
-        info.update(converted: "", iast: nil, gloss: nil, analyses: [],
-                    candidates: candDisplay, page: candidatePage, pageCount: pageCount,
-                    compound: [], at: lastCaretRect)
+        if gloss == nil && candDisplay.isEmpty { info.hide(); return }
+        let head = PaliEngine.transliterate(nextWordHead, script: script, smartNasal: false)
+        info.update(converted: head, iast: script == .roman ? nil : nextWordHead,
+                    gloss: gloss, analyses: [], candidates: candDisplay,
+                    page: candidatePage, pageCount: pageCount, compound: [], at: lastCaretRect)
     }
 
     private func dismissNextWord() {
         if buffer.isEmpty, !candidates.isEmpty {
             candidates = []
             candidatePage = 0
+            nextWordHead = ""
             info.hide()
         }
     }
@@ -200,7 +208,7 @@ final class PaliController: IMKInputController {
         let np = candidatePage + dir
         guard np >= 0, np < pageCount else { return }
         candidatePage = np
-        if buffer.isEmpty { renderCandidatesOnly(client) } else { updatePreedit(client) }
+        if buffer.isEmpty { renderNextWord(client) } else { updatePreedit(client) }
     }
 
     // Pick candidate #index. While composing this is a completion → commit the
