@@ -263,6 +263,21 @@
     matchAffixes(p, l) { return this._init().matchAffixes(p, l); },
     analyze(p, l) { return this._init().analyze(p, l); },
     toAkk(s) { return this._init().toAkk(s); },
+    // Word completion: prefix-match a frequency-ranked word list (array of
+    // [lemma, freq, meaning], pre-sorted by freq desc). Pure — no engine init.
+    completeWord(prefix, words, limit) {
+      limit = limit || 6;
+      const p = (prefix || '').toLowerCase();
+      if (!p || !words) return [];
+      const out = [];
+      for (const e of words) {
+        if (e[0].length > p.length && e[0].startsWith(p)) {
+          out.push({ w: e[0], freq: e[1], en: e[2] || '' });
+          if (out.length >= limit) break;
+        }
+      }
+      return out;
+    },
   };
 
   if (typeof module !== 'undefined' && module.exports) {

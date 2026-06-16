@@ -19,13 +19,13 @@ roughly prioritized. Checked = shipped.
 
 ## A. Prediction / suggestions
 
-- [ ] **Word completion (单词补全)** — *in progress.* Prefix-match the lexicon
-      and suggest whole words in a candidate bar, click to insert. Extends the
-      akkhara-level "next sound" to word level.
-- [ ] **Frequency ranking** — rank predictions by real canonical frequency.
-      Source found: DPD `freq_data.CstFreq` is a per-book count array;
-      **sum = total Tipiṭaka frequency** per lemma. Build a `lemma → freq`
-      index from it.
+- [x] **Word completion (单词补全)** — *web done.* Prefix-matches a
+      frequency-ranked word list in the 补全 candidate row, click to insert.
+      Next: wire into the native apps (macOS/iOS/Android).
+- [x] **Frequency ranking** — `tools/build-freq-words.cjs` sums DPD
+      `freq_data.CstFreq` per lemma → `freq-words.json` (top 8k). Curated core
+      vocabulary is boosted (DPD freq is empty for some core words, e.g.
+      nibbāna), so a learner's key words always surface first.
 - [ ] **Compound / phrase (词组) suggestions** — known-compound completion;
       true samāsa splitting needs a corpus (harder).
 - [ ] **Inflection-aware lookup** — import DPD's inflected-form → headword map

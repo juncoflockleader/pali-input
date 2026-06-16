@@ -223,5 +223,17 @@ hasSplit('mettā', (c) => c.stem.label === 'mettā', 'mettā -> mettā (lemma)')
   assert(a.length && a[0].full && a[0].stem.label === 'viññāṇa', 'viññāṇaṃ -> viññāṇa full');
 }
 
+// --- Word completion (frequency-ranked) ------------------------------------
+const FW = require('./freq-words.json');
+{
+  const dhamm = P.completeWord('dhamm', FW, 6).map((x) => x.w);
+  assert(dhamm.some((w) => w.startsWith('dhamm') && w !== 'dhamma'), 'completeWord dhamm -> longer words');
+  assert(!P.completeWord('dhamma', FW, 6).map((x) => x.w).includes('dhamma'), 'completeWord skips exact prefix');
+  assert(P.completeWord('nibbā', FW, 10).map((x) => x.w).includes('nibbāna'), 'completeWord nibbā -> nibbāna');
+  const fr = P.completeWord('s', FW, 8).map((x) => x.freq);
+  assert(fr.every((v, i) => i === 0 || fr[i - 1] >= v), 'completeWord is frequency-ordered');
+  assert(P.completeWord('', FW, 6).length === 0, 'completeWord empty prefix -> none');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

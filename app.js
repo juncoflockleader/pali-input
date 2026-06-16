@@ -15,6 +15,19 @@ const nextSoundsEl = $('nextSounds');
 const rootHintsEl = $('rootHints');
 const affixHintsEl = $('affixHints');
 const analysisEl = $('analysis');
+const completionsEl = $('completions');
+
+// Frequency-ranked word list for completion — lazy-loaded (~366 KB) on first use.
+let freqWords = null;
+let freqLoading = false;
+function ensureFreqWords() {
+  if (freqWords || freqLoading) return;
+  freqLoading = true;
+  fetch('freq-words.json')
+    .then((r) => r.json())
+    .then((d) => { freqWords = d; render(); })
+    .catch(() => { freqLoading = false; });
+}
 
 // Reverse map: IAST akkhara -> how to type it in the ASCII scheme.
 const IAST_TO_INPUT = {
@@ -154,6 +167,20 @@ function render() {
   renderPredict();
 }
 
+// Frequency-ranked word completions for the word being typed.
+function renderCompletions(word) {
+  if (!word) { completionsEl.innerHTML = '<span class="h-empty">输入一个词…</span>'; return; }
+  ensureFreqWords();
+  if (!freqWords) { completionsEl.innerHTML = '<span class="h-empty">加载词频表…</span>'; return; }
+  const iast = transliterate(word, 'roman', { smartNasal: true }).toLowerCase();
+  const list = Predict.completeWord(iast, freqWords, 6);
+  completionsEl.innerHTML = list.length
+    ? list
+        .map((c) => `<button class="h-chip" data-fill="${escapeHtml(iastToInput(c.w))}" title="点选填入">${escapeHtml(c.w)}${c.en ? ` <span class="h-gloss">${escapeHtml(c.en)}</span>` : ''}</button>`)
+        .join('')
+    : '<span class="h-empty">无补全</span>';
+}
+
 // Render the morphological split (prefix + root/word + ending) of a word.
 function renderAnalysis(word) {
   if (!word) {
@@ -185,6 +212,7 @@ function renderPredict() {
   const word = currentWord();
   const pre = Predict.toAkk(word);
 
+  renderCompletions(word);
   renderAnalysis(word);
 
   // Next sounds — clickable, append the typed form of that akkhara.
@@ -309,6 +337,7 @@ function fillHandler(e) {
 }
 rootHintsEl.addEventListener('click', fillHandler);
 affixHintsEl.addEventListener('click', fillHandler);
+completionsEl.addEventListener('click', fillHandler);
 
 $('clearBtn').addEventListener('click', () => {
   input.value = '';
