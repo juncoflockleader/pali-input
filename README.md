@@ -207,6 +207,20 @@ node test.js   # 95 passed, 0 failed
 - **缅甸文**:ṅ 作为连写首音的 *kinzi*(င်္,如 saṅgha→သင်္ဃ)已正确处理。
 - 引擎面向标准巴利音系；不处理梵语特有音（ṛ ṝ ḹ ś ṣ ḥ 等）。
 
+## 分发 · Distribution
+
+各端怎么送到用户手里(仅讲方式):
+
+| 端 | 怎么分发 | 是否需开发者账号 |
+|------|----------|------------------|
+| **网页 / PWA** | 已托管在 GitHub Pages,有链接即用;可「安装」到手机主屏 / 电脑程序坞,离线可用 | 不需要 |
+| **macOS** | 本地 `./build.sh` 出 `.app`。**自用**:ad-hoc 签名,首次在「系统设置 → 隐私与安全性」点「仍要打开」即可。**公开分发零警告**:用 Developer ID 签名 + 公证(notarize),用户双击即开 | 自用不需要;签名 + 公证需 Apple 开发者账号 |
+| **iOS / iPadOS** | Xcode 建工程,真机 / 模拟器运行;对外走 App Store 或 TestFlight | 需 Apple 开发者账号 |
+| **Android** | Android Studio 构建出 APK,可直接发给人 sideload;或上架 Google Play | sideload 不需要;上架 Play 需开发者账号 |
+| **Keyman**(Win/Linux/web/移动) | Keyman Developer 编译 `.kmn` → 安装包;用户装免费的 Keyman app 后加载键盘 | 不需要 Apple / Google 账号 |
+
+**建议**:面向最广用户、零门槛——主推**网页 PWA**(手机加到主屏、电脑装为应用,均离线可用),它已覆盖绝大多数场景。iOS 想免账号可用 PWA 或 Keyman 内的键盘替代;Android 可直接发 APK;macOS 自用免签名,需要公开零警告分发时再上 Developer ID 公证。
+
 ## 路线图与许可 · Roadmap & License
 
 - 后续改进计划见 [ROADMAP.md](ROADMAP.md)。
