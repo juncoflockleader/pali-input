@@ -194,7 +194,7 @@ node tools/build-roots.mjs        # => 685 roots (85 中文, 600 English-only)
 ## 测试 · Tests
 
 ```bash
-node test.js   # 53 passed, 0 failed
+node test.js   # 95 passed, 0 failed
 ```
 
 测试覆盖五种文字的已知正确写法（如 buddha→बुद्ध / බුද්ධ / พุทฺธ / ဗုဒ္ဓ）。
@@ -204,3 +204,12 @@ node test.js   # 53 passed, 0 failed
 - **缅甸文**为实验性：ṅ 在辅音连写中的 *kinzi*（င်္）形式以普通叠写近似，
   个别词形可能与传统排版略有出入；其余写法正确。
 - 引擎面向标准巴利音系；不处理梵语特有音（ṛ ṝ ḹ ś ṣ ḥ 等）。
+
+## 路线图与许可 · Roadmap & License
+
+- 后续改进计划见 [ROADMAP.md](ROADMAP.md)。
+- **代码**采用 **MIT**（[LICENSE](LICENSE)）。
+- **打包的 DPD 数据**（`roots.data.js`、`dpd-dict.json`）来自
+  [Digital Pāḷi Dictionary](https://github.com/digitalpalidictionary/dpd-db)，
+  采用 **CC BY-NC-SA**（非商业 + 相同方式共享）——详见 [NOTICE.md](NOTICE.md)。
+  含该数据的发行版为非商业用途；纯 MIT / 可商用构建需移除 DPD 数据（仅保留人工词库）。
