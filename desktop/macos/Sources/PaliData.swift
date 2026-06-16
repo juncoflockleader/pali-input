@@ -40,19 +40,21 @@ final class PaliData {
         let dpdURL = Bundle.main.url(forResource: "dpd-dict", withExtension: "json")
         let freqURL = Bundle.main.url(forResource: "freq-words", withExtension: "json")
         let compURL = Bundle.main.url(forResource: "compounds", withExtension: "json")
-        return PaliData(url: url, dpdURL: dpdURL, freqURL: freqURL, compoundsURL: compURL)
+        let bigramURL = Bundle.main.url(forResource: "bigram", withExtension: "json")
+        return PaliData(url: url, dpdURL: dpdURL, freqURL: freqURL, compoundsURL: compURL, bigramURL: bigramURL)
     }()
 
     private let data: Bundled
     private let dpd: [String: String]   // full DPD lemma -> English meaning (75k+)
     private let freqWords: [(w: String, en: String)]  // frequency-ranked, for completion
     private let compounds: [String: [String]]  // compound lemma -> member lemmas
+    private let bigram: [String: [String]]     // word -> top next words (corpus order)
     private let rootForms: [(root: Root, forms: [(form: String, akk: [String])])]
     private let prefixesAll: [(aff: Affix, akk: [String])]
     private let endingsSorted: [(end: Ending, akk: [String])]
     private let glossAkk: [(w: String, akk: [String], en: String, zh: String)]
 
-    init?(url: URL, dpdURL: URL? = nil, freqURL: URL? = nil, compoundsURL: URL? = nil) {
+    init?(url: URL, dpdURL: URL? = nil, freqURL: URL? = nil, compoundsURL: URL? = nil, bigramURL: URL? = nil) {
         guard let raw = try? Data(contentsOf: url),
               let d = try? JSONDecoder().decode(Bundled.self, from: raw) else { return nil }
         data = d
@@ -61,6 +63,12 @@ final class PaliData {
             compounds = cc
         } else {
             compounds = [:]
+        }
+        if let bu = bigramURL, let braw = try? Data(contentsOf: bu),
+           let bb = try? JSONDecoder().decode([String: [String]].self, from: braw) {
+            bigram = bb
+        } else {
+            bigram = [:]
         }
         if let du = dpdURL, let draw = try? Data(contentsOf: du),
            let dd = try? JSONDecoder().decode([String: String].self, from: draw) {
@@ -156,6 +164,18 @@ final class PaliData {
             if out.count >= limit { break }
         }
         return out
+    }
+
+    // MARK: next-word prediction (bigram model from the Pali canon)
+    // Given the word just committed, return likely following words (with glosses).
+    func nextWord(_ word: String, limit: Int = 5) -> [Completion] {
+        let w = word.lowercased()
+        var succ = bigram[w]
+        if succ == nil, let last = w.last, last == "ṃ" || last == "m" {
+            succ = bigram[String(w.dropLast())]
+        }
+        guard let words = succ else { return [] }
+        return words.prefix(limit).map { Completion(w: $0, en: lookup($0)?.en ?? "") }
     }
 
     // MARK: morphological split (prefix + root/word + ending)

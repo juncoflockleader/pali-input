@@ -17,9 +17,13 @@ final class PaliController: IMKInputController {
 
     private let notFound = NSRange(location: NSNotFound, length: 0)
     private let info = InfoPanel.shared
-    private var candidates: [Completion] = []   // all completions for the buffer
+    // The candidate window serves two states: while composing it lists word
+    // completions; while idle right after a commit it lists next-word
+    // predictions (bigram). `buffer.isEmpty` distinguishes them.
+    private var candidates: [Completion] = []   // current candidate list
     private var candidatePage = 0               // current page (paged with -/=)
     private let pageSize = 5                     // candidates per line/page
+    private var lastCaretRect = NSRect.zero      // caret position from last compose
 
     override init!(server: IMKServer!, delegate: Any!, client inputClient: Any!) {
         super.init(server: server, delegate: delegate, client: inputClient)
@@ -42,8 +46,24 @@ final class PaliController: IMKInputController {
         // Let the system own ⌘/⌃ shortcuts; commit anything pending first.
         let flags = event.modifierFlags
         if flags.contains(.command) || flags.contains(.control) {
-            if !buffer.isEmpty { commit(client) }
+            if !buffer.isEmpty { commit(client) } else { dismissNextWord() }
             return false
+        }
+
+        let ch: Character? = (event.characters?.count == 1) ? event.characters?.first : nil
+
+        // Candidate-window keys work in BOTH states (completions while composing,
+        // next-word predictions while idle): number to pick, -/= to page.
+        if !candidates.isEmpty, let c = ch {
+            if c == "=" || c == "+" { pageCandidates(client, +1); return true }
+            if c == "-" || c == "_" { pageCandidates(client, -1); return true }
+            if let d = c.wholeNumberValue, d >= 1, d <= pageSize {
+                let idx = candidatePage * pageSize + (d - 1)
+                if idx < candidates.count { selectCandidate(client, idx); return true }
+            }
+            // any other key dismisses pending next-word predictions, then is
+            // handled normally below (so typing starts a fresh word)
+            if buffer.isEmpty { dismissNextWord() }
         }
 
         switch event.keyCode {
@@ -62,32 +82,17 @@ final class PaliController: IMKInputController {
             if buffer.isEmpty { return false }
             commit(client)
             return true
-        case 49: // space — commit, then a literal space
+        case 49: // space — commit the word, emit a space, then predict next
             if buffer.isEmpty { return false }
+            let iast = PaliEngine.transliterate(buffer, script: .roman, smartNasal: smartNasal)
             commit(client)
             client.insertText(" ", replacementRange: notFound)
+            showNextWord(client, after: iast)
             return true
         default:
-            guard let chars = event.characters, chars.count == 1, let c = chars.first else {
+            guard let c = ch else {
                 if !buffer.isEmpty { commit(client) }
                 return false
-            }
-            // candidate window keys (Chinese-IME style) while composing:
-            if !buffer.isEmpty, !candidates.isEmpty {
-                // -/= page through candidates
-                if c == "=" || c == "+" {
-                    if (candidatePage + 1) * pageSize < candidates.count { candidatePage += 1; updatePreedit(client) }
-                    return true
-                }
-                if c == "-" || c == "_" {
-                    if candidatePage > 0 { candidatePage -= 1; updatePreedit(client) }
-                    return true
-                }
-                // 1–pageSize selects within the current page
-                if let d = c.wholeNumberValue, d >= 1, d <= pageSize {
-                    let idx = candidatePage * pageSize + (d - 1)
-                    if idx < candidates.count { selectCandidate(client, idx); return true }
-                }
             }
             if isInputChar(c) {
                 buffer.append(c)
@@ -148,17 +153,72 @@ final class PaliController: IMKInputController {
         }
         var rect = NSRect.zero
         _ = client.attributes(forCharacterIndex: 0, lineHeightRectangle: &rect)
+        lastCaretRect = rect   // remember for the next-word panel (no marked text then)
         info.update(converted: converted,
                     iast: script == .roman ? nil : iast,
                     gloss: gloss, analyses: analyses, candidates: candDisplay,
                     page: candidatePage, pageCount: pageCount, compound: compound, at: rect)
     }
 
-    // Pick completion #index: replace the composition with that whole word.
+    // MARK: next-word prediction
+    // Shown after a word is committed: the bigram model's likely successors,
+    // numbered like completions. Picking one inserts it + a space and chains.
+    private func showNextWord(_ client: IMKTextInput, after word: String) {
+        guard let data = PaliData.shared else { return }
+        candidates = data.nextWord(word)
+        candidatePage = 0
+        if candidates.isEmpty { info.hide(); return }
+        renderCandidatesOnly(client)
+    }
+
+    // Render the current `candidates` as a bare candidate row (no headword /
+    // gloss block), anchored at the last known caret position.
+    private func renderCandidatesOnly(_ client: IMKTextInput) {
+        let pageCount = max(1, (candidates.count + pageSize - 1) / pageSize)
+        if candidatePage >= pageCount { candidatePage = pageCount - 1 }
+        let start = candidatePage * pageSize
+        let pageItems = Array(candidates[start..<min(start + pageSize, candidates.count)])
+        let candDisplay = pageItems.map { c -> (label: String, en: String) in
+            (PaliEngine.transliterate(c.w, script: script, smartNasal: false), c.en)
+        }
+        info.update(converted: "", iast: nil, gloss: nil, analyses: [],
+                    candidates: candDisplay, page: candidatePage, pageCount: pageCount,
+                    compound: [], at: lastCaretRect)
+    }
+
+    private func dismissNextWord() {
+        if buffer.isEmpty, !candidates.isEmpty {
+            candidates = []
+            candidatePage = 0
+            info.hide()
+        }
+    }
+
+    // Page the candidate list in either state (-/=).
+    private func pageCandidates(_ client: IMKTextInput, _ dir: Int) {
+        let pageCount = max(1, (candidates.count + pageSize - 1) / pageSize)
+        let np = candidatePage + dir
+        guard np >= 0, np < pageCount else { return }
+        candidatePage = np
+        if buffer.isEmpty { renderCandidatesOnly(client) } else { updatePreedit(client) }
+    }
+
+    // Pick candidate #index. While composing this is a completion → commit the
+    // whole word + a space; while idle it is a next-word prediction → insert it
+    // + a space. Either way, chain into the next prediction.
     private func selectCandidate(_ client: IMKTextInput, _ index: Int) {
         guard index < candidates.count else { return }
-        buffer = candidates[index].w  // engine accepts IAST input directly
-        commit(client)
+        let w = candidates[index].w  // IAST
+        let out = PaliEngine.transliterate(w, script: script, smartNasal: false)
+        if !buffer.isEmpty {
+            // replace the marked composition, then the word + space
+            buffer = ""
+            client.setMarkedText("", selectionRange: NSRange(location: 0, length: 0), replacementRange: notFound)
+        }
+        client.insertText(out + " ", replacementRange: notFound)
+        candidates = []
+        candidatePage = 0
+        showNextWord(client, after: w)
     }
 
     private func commit(_ client: IMKTextInput) {
@@ -176,6 +236,9 @@ final class PaliController: IMKInputController {
 
     override func deactivateServer(_ sender: Any!) {
         if let client = sender as? IMKTextInput { commit(client) }
+        candidates = []
+        candidatePage = 0
+        info.hide()
         super.deactivateServer(sender)
     }
 

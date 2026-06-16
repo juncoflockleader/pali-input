@@ -44,6 +44,7 @@ cp Resources/pali-data.json "$RES/"
 cp Resources/dpd-dict.json "$RES/"
 cp Resources/freq-words.json "$RES/"
 cp Resources/compounds.json "$RES/"
+cp Resources/bigram.json "$RES/"
 
 # Ad-hoc codesign so the bundle loads on the local machine.
 codesign --force --sign - "$APP" 2>/dev/null || echo "  (codesign skipped)"

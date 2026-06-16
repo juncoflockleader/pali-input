@@ -108,6 +108,7 @@ final class InfoPanel {
                 .foregroundColor: NSColor.systemTeal]))
         }
         infoLabel.attributedStringValue = s
+        infoLabel.isHidden = (s.length == 0)   // next-word state: candidate row only
 
         // --- size & place ---
         // The candidate row is one line and must not clip: size the panel to its
@@ -117,10 +118,12 @@ final class InfoPanel {
         let contentW = min(maxWidth, max(candW, 220))
         infoLabel.preferredMaxLayoutWidth = contentW
         stack.layoutSubtreeIfNeeded()
-        let infoFit = infoLabel.fittingSize
+        let infoVisible = !infoLabel.isHidden
+        let infoFit = infoVisible ? infoLabel.fittingSize : .zero
         let w = ceil(max(contentW, infoFit.width)) + 24
-        let candH = candidateLabel.isHidden ? 0 : ceil(candNat.height) + 5
-        let h = candH + ceil(infoFit.height) + 18
+        let candH = candidateLabel.isHidden ? 0 : ceil(candNat.height)
+        let spacing: CGFloat = (infoVisible && !candidateLabel.isHidden) ? 5 : 0
+        let h = candH + spacing + ceil(infoFit.height) + 18
         panel.setContentSize(NSSize(width: w, height: h))
         panel.setFrameTopLeftPoint(NSPoint(x: rect.minX, y: rect.minY - 3))
         panel.orderFront(nil)

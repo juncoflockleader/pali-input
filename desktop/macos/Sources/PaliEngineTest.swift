@@ -62,7 +62,8 @@ struct EngineTests {
         if let pd = PaliData(url: URL(fileURLWithPath: "Resources/pali-data.json"),
                              dpdURL: URL(fileURLWithPath: "Resources/dpd-dict.json"),
                              freqURL: URL(fileURLWithPath: "Resources/freq-words.json"),
-                             compoundsURL: URL(fileURLWithPath: "Resources/compounds.json")) {
+                             compoundsURL: URL(fileURLWithPath: "Resources/compounds.json"),
+                             bigramURL: URL(fileURLWithPath: "Resources/bigram.json")) {
             func gloss(_ w: String, _ zh: String) {
                 if pd.lookup(w)?.zh == zh { pass += 1 } else { fail += 1; print("FAIL gloss \(w) -> \(pd.lookup(w)?.zh ?? "nil")") }
             }
@@ -106,6 +107,19 @@ struct EngineTests {
             if pd.splitCompound("satipaṭṭhāna") == ["sati", "upaṭṭhāna"] { pass += 1 } else { fail += 1; print("FAIL split satipaṭṭhāna -> \(pd.splitCompound("satipaṭṭhāna"))") }
             if pd.splitCompound("buddhānussati") == ["buddha", "anussati"] { pass += 1 } else { fail += 1; print("FAIL split buddhānussati") }
             if pd.splitCompound("buddha").isEmpty { pass += 1 } else { fail += 1; print("FAIL split non-compound buddha") }
+
+            // next-word prediction (bigram from the Pali canon)
+            func nextHas(_ w: String, _ expect: String) {
+                let succ = pd.nextWord(w).map { $0.w }
+                if succ.contains(expect) { pass += 1 }
+                else { fail += 1; print("FAIL nextWord \(w) -> \(succ) (want \(expect))") }
+            }
+            nextHas("buddhaṃ", "saraṇaṃ")   // buddhaṃ saraṇaṃ gacchāmi
+            nextHas("dhammaṃ", "deseti")    // "teaches the Dhamma" — the canon's top collocation
+            nextHas("namo", "tassa")        // namo tassa bhagavato
+            nextHas("sabbe", "sattā")       // sabbe sattā …
+            if !pd.nextWord("saṅghaṃ").isEmpty { pass += 1 } else { fail += 1; print("FAIL nextWord saṅghaṃ empty") }
+            if pd.nextWord("zzznotaword").isEmpty { pass += 1 } else { fail += 1; print("FAIL nextWord unknown") }
         } else {
             fail += 1
             print("FAIL: could not load Resources/pali-data.json (run from desktop/macos)")
