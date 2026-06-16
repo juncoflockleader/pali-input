@@ -17,7 +17,9 @@ final class PaliController: IMKInputController {
 
     private let notFound = NSRange(location: NSNotFound, length: 0)
     private let info = InfoPanel.shared
-    private var candidates: [Completion] = []   // current completions, selectable 1–9
+    private var candidates: [Completion] = []   // all completions for the buffer
+    private var candidatePage = 0               // current page (paged with -/=)
+    private let pageSize = 5                     // candidates per line/page
 
     override init!(server: IMKServer!, delegate: Any!, client inputClient: Any!) {
         super.init(server: server, delegate: delegate, client: inputClient)
@@ -48,6 +50,7 @@ final class PaliController: IMKInputController {
         case 51: // delete
             if buffer.isEmpty { return false }
             buffer.removeLast()
+            candidatePage = 0
             updatePreedit(client)
             return true
         case 53: // escape — discard composition
@@ -69,13 +72,26 @@ final class PaliController: IMKInputController {
                 if !buffer.isEmpty { commit(client) }
                 return false
             }
-            // number-key candidate selection (Chinese-IME style): pick 1–9
-            if !buffer.isEmpty, !candidates.isEmpty, let d = c.wholeNumberValue, d >= 1, d <= candidates.count {
-                selectCandidate(client, d - 1)
-                return true
+            // candidate window keys (Chinese-IME style) while composing:
+            if !buffer.isEmpty, !candidates.isEmpty {
+                // -/= page through candidates
+                if c == "=" || c == "+" {
+                    if (candidatePage + 1) * pageSize < candidates.count { candidatePage += 1; updatePreedit(client) }
+                    return true
+                }
+                if c == "-" || c == "_" {
+                    if candidatePage > 0 { candidatePage -= 1; updatePreedit(client) }
+                    return true
+                }
+                // 1–pageSize selects within the current page
+                if let d = c.wholeNumberValue, d >= 1, d <= pageSize {
+                    let idx = candidatePage * pageSize + (d - 1)
+                    if idx < candidates.count { selectCandidate(client, idx); return true }
+                }
             }
             if isInputChar(c) {
                 buffer.append(c)
+                candidatePage = 0
                 updatePreedit(client)
                 return true
             }
@@ -99,6 +115,7 @@ final class PaliController: IMKInputController {
         if buffer.isEmpty {
             client.setMarkedText("", selectionRange: NSRange(location: 0, length: 0), replacementRange: notFound)
             candidates = []
+            candidatePage = 0
             info.hide()
             return
         }
@@ -117,19 +134,24 @@ final class PaliController: IMKInputController {
         let iast = PaliEngine.transliterate(buffer, script: .roman, smartNasal: smartNasal)
         let gloss = data.lookup(iast)
         let analyses = data.analyze(data.toAkk(iast), limit: 2)
-        candidates = data.completeWord(iast, limit: 9)
+        candidates = data.completeWord(iast, limit: pageSize * 9)   // up to 9 pages
         let compound = data.splitCompound(iast, lemma: gloss?.key)
         if gloss == nil && analyses.isEmpty && candidates.isEmpty && compound.isEmpty { info.hide(); return }
 
-        // candidate display: convert each lemma into the active script (+ gloss)
-        let candDisplay = candidates.map { c -> (label: String, en: String) in
+        // current page slice, converted into the active script
+        let pageCount = max(1, (candidates.count + pageSize - 1) / pageSize)
+        if candidatePage >= pageCount { candidatePage = pageCount - 1 }
+        let start = candidatePage * pageSize
+        let pageItems = Array(candidates[start..<min(start + pageSize, candidates.count)])
+        let candDisplay = pageItems.map { c -> (label: String, en: String) in
             (PaliEngine.transliterate(c.w, script: script, smartNasal: false), c.en)
         }
         var rect = NSRect.zero
         _ = client.attributes(forCharacterIndex: 0, lineHeightRectangle: &rect)
         info.update(converted: converted,
                     iast: script == .roman ? nil : iast,
-                    gloss: gloss, analyses: analyses, candidates: candDisplay, compound: compound, at: rect)
+                    gloss: gloss, analyses: analyses, candidates: candDisplay,
+                    page: candidatePage, pageCount: pageCount, compound: compound, at: rect)
     }
 
     // Pick completion #index: replace the composition with that whole word.
@@ -144,6 +166,7 @@ final class PaliController: IMKInputController {
         client.insertText(converted, replacementRange: notFound)
         buffer = ""
         candidates = []
+        candidatePage = 0
         info.hide()
     }
 
