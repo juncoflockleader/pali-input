@@ -47,10 +47,11 @@ The engine output matches the web/macOS engines exactly (same test vectors).
 
 ## Notes / limitations
 
-- v1 shows the **gloss** in the suggestion bar (curated bilingual → DPD
-  English). The full morphological split (prefix+root+ending) that the macOS
-  IME shows isn't ported to Android yet — `PaliEngine.kt` + `PaliData.kt` are in
-  place to add it.
+- The suggestion bar shows the **gloss** (curated bilingual → DPD English) plus
+  the **morphological split** (prefix + root/word + ending), e.g. `dhammassa` →
+  `dhamma -assa`, `anugacchati` → `anu-√gam -ti`. The splitter is a full Kotlin
+  port of `predict.js`, verified on the JVM (`test/PaliDataTest.kt`, 9/9 incl.
+  analyses) against real bundled data.
 - The DPD dictionary (~4 MB) is parsed once on a background thread at startup.
 - Gradle versions in the build files are a known-good combo; Android Studio may
   adjust them to match your installed SDK/Gradle.

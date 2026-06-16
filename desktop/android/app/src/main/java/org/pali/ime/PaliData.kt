@@ -1,7 +1,9 @@
-// PaliData.kt — glossary / dictionary lookup for the suggestion bar.
-// Loads the curated bilingual glossary (pali-data.json) and the full DPD
-// dictionary (dpd-dict.json) from app assets. Lookup priority:
-//   curated bilingual (has 中文) -> DPD (English) -> none.
+// PaliData.kt — glossary/dictionary lookup + morphological splitter for the
+// suggestion bar. Mirrors glossary.js + predict.js + PaliData.swift.
+//
+// Loads the curated bilingual glossary + roots/affixes (pali-data.json) and the
+// full DPD dictionary (dpd-dict.json) from app assets. Pure logic (besides JSON
+// loading) so analyze() can be unit-tested on the JVM.
 
 package org.pali.ime
 
@@ -9,11 +11,33 @@ import android.content.Context
 import org.json.JSONObject
 
 data class GlossResult(val en: String, val zh: String, val key: String, val stem: Boolean)
+data class StemMatch(val kind: String, val label: String, val en: String, val zh: String) // root/word/raw
+data class PrefixHit(val form: String, val en: String, val zh: String)
+data class EndingHit(val end: String, val en: String, val zh: String)
+data class Analysis(
+    val prefixes: List<PrefixHit>,
+    val stem: StemMatch,
+    val ending: EndingHit?,
+    val full: Boolean,
+    val recognized: Int,
+) {
+    val morphemes: Int get() = prefixes.size + if (ending == null) 0 else 1
+}
 
 class PaliData private constructor(
-    private val glossary: Map<String, Pair<String, String>>, // word -> (en, zh)
-    private val dpd: JSONObject                               // lemma -> meaning (English)
+    private val glossary: Map<String, Pair<String, String>>,
+    private val dpd: JSONObject,
+    private val rootForms: List<RootEntry>,
+    private val prefixesAll: List<AffixEntry>,
+    private val endingsSorted: List<EndingEntry>,
+    private val glossAkk: List<GlossAkk>,
 ) {
+    private class RootEntry(val root: String, val en: String, val zh: String, val forms: List<Pair<String, List<String>>>)
+    private class AffixEntry(val form: String, val en: String, val zh: String, val akk: List<String>)
+    private class EndingEntry(val end: String, val en: String, val zh: String, val akk: List<String>)
+    private class GlossAkk(val w: String, val akk: List<String>, val en: String, val zh: String)
+
+    // MARK: gloss lookup (curated bilingual -> DPD English)
     fun lookup(word: String): GlossResult? {
         val k = word.lowercase()
         glossary[k]?.let { return GlossResult(it.first, it.second, k, false) }
@@ -22,22 +46,155 @@ class PaliData private constructor(
         stemKey(k)?.let { k2 -> if (dpd.has(k2)) return GlossResult(dpd.optString(k2), "", k2, true) }
         return null
     }
-
-    // strip a trailing niggahīta / -m (common accusative ending)
     private fun stemKey(k: String): String? =
         if (k.isNotEmpty() && (k.last() == 'ṃ' || k.last() == 'm')) k.dropLast(1) else null
 
-    companion object {
-        fun load(ctx: Context): PaliData {
-            val g = HashMap<String, Pair<String, String>>()
-            val paliData = ctx.assets.open("pali-data.json").bufferedReader().use { it.readText() }
-            val gloss = JSONObject(paliData).getJSONObject("glossary")
-            for (key in gloss.keys()) {
-                val o = gloss.getJSONObject(key)
-                g[key] = Pair(o.optString("en"), o.optString("zh"))
+    // MARK: akkhara helpers (lenient nasals / final-m)
+    private fun akkEq(u: String, l: String): Boolean {
+        if (u == l) return true
+        if (u == "n" && (l == "ṅ" || l == "ñ" || l == "ṇ")) return true
+        if (u == "m" && l == "ṃ") return true
+        return false
+    }
+    private fun startsWith(lex: List<String>, pre: List<String>): Boolean {
+        if (pre.size > lex.size) return false
+        for (i in pre.indices) if (!akkEq(pre[i], lex[i])) return false
+        return true
+    }
+    private fun endsWith(arr: List<String>, suf: List<String>): Boolean {
+        if (suf.size > arr.size) return false
+        val off = arr.size - suf.size
+        for (i in suf.indices) if (!akkEq(arr[off + i], suf[i])) return false
+        return true
+    }
+    private fun equalAkk(a: List<String>, b: List<String>) = a.size == b.size && startsWith(a, b)
+
+    private fun matchStemWord(stem: List<String>): StemMatch? {
+        for (g in glossAkk) if (equalAkk(g.akk, stem)) return StemMatch("word", g.w, g.en, g.zh)
+        for (g in glossAkk) if (g.akk.size > stem.size && g.akk.size - stem.size <= 1 && startsWith(g.akk, stem))
+            return StemMatch("word", g.w, g.en, g.zh)
+        return null
+    }
+    private fun matchStemRoot(stem: List<String>): StemMatch? {
+        for (rf in rootForms) for (f in rf.forms) {
+            if (equalAkk(f.second, stem) ||
+                (stem.size > f.second.size && stem.size - f.second.size <= 1 && startsWith(stem, f.second)))
+                return StemMatch("root", "√" + rf.root, rf.en, rf.zh)
+        }
+        return null
+    }
+    private fun matchStemDpd(stem: List<String>): StemMatch? {
+        val key = stem.joinToString("")
+        if (dpd.has(key)) return StemMatch("word", key, dpd.optString(key), "")
+        return null
+    }
+
+    // MARK: morphological split (prefix + root/word + ending)
+    fun analyze(akk: List<String>, limit: Int = 2): List<Analysis> {
+        if (akk.isEmpty()) return emptyList()
+
+        val prefixOpts = ArrayList<Pair<List<PrefixHit>, List<String>>>()
+        prefixOpts.add(Pair(emptyList(), akk))
+        for (p in prefixesAll) {
+            if (akk.size > p.akk.size && startsWith(akk, p.akk)) {
+                val rest1 = akk.subList(p.akk.size, akk.size).toList()
+                val ph = PrefixHit(p.form, p.en, p.zh)
+                prefixOpts.add(Pair(listOf(ph), rest1))
+                for (q in prefixesAll) {
+                    if (rest1.size > q.akk.size && startsWith(rest1, q.akk)) {
+                        prefixOpts.add(Pair(listOf(ph, PrefixHit(q.form, q.en, q.zh)), rest1.subList(q.akk.size, rest1.size).toList()))
+                    }
+                }
             }
-            val dpdText = ctx.assets.open("dpd-dict.json").bufferedReader().use { it.readText() }
-            return PaliData(g, JSONObject(dpdText))
+        }
+
+        val cands = ArrayList<Analysis>()
+        for ((prefixes, rest) in prefixOpts) {
+            val endOpts = ArrayList<Pair<EndingEntry?, List<String>>>()
+            endOpts.add(Pair(null, rest))
+            for (e in endingsSorted) {
+                if (rest.size > e.akk.size && endsWith(rest, e.akk)) {
+                    endOpts.add(Pair(e, rest.subList(0, rest.size - e.akk.size).toList()))
+                }
+            }
+            for ((ending, stem) in endOpts) {
+                if (stem.isEmpty()) continue
+                val match = matchStemWord(stem) ?: matchStemRoot(stem) ?: matchStemDpd(stem)
+                val stemM = match ?: StemMatch("raw", stem.joinToString(""), "", "")
+                val pfxLen = akk.size - rest.size
+                val endLen = rest.size - stem.size
+                val stemLen = if (match != null) stem.size else 0
+                val endingHit = ending?.let { EndingHit(it.end, it.en, it.zh) }
+                cands.add(Analysis(prefixes, stemM, endingHit, match != null, pfxLen + endLen + stemLen))
+            }
+        }
+
+        cands.sortWith(
+            compareByDescending<Analysis> { it.full }
+                .thenByDescending { it.recognized }
+                .thenBy { it.morphemes }
+                .thenBy { it.prefixes.size }
+        )
+        val seen = HashSet<String>()
+        val dedup = ArrayList<Analysis>()
+        for (c in cands) {
+            val sig = c.prefixes.joinToString("+") { it.form } + "|" + c.stem.label
+            if (seen.add(sig)) dedup.add(c)
+        }
+        val fulls = dedup.filter { it.full }
+        return if (fulls.isNotEmpty()) fulls.take(limit) else dedup.take(1)
+    }
+
+    companion object {
+        fun toAkk(s: String): List<String> =
+            PaliEngine.tokenize(s, false).filter { it.type != TokType.OTHER }.map { it.iast }
+
+        fun load(ctx: Context): PaliData {
+            val pt = ctx.assets.open("pali-data.json").bufferedReader().use { it.readText() }
+            val dt = ctx.assets.open("dpd-dict.json").bufferedReader().use { it.readText() }
+            return build(JSONObject(pt), JSONObject(dt))
+        }
+        // For JVM tests: construct from JSON text directly.
+        fun fromJson(paliText: String, dpdText: String): PaliData =
+            build(JSONObject(paliText), JSONObject(dpdText))
+
+        private fun build(pali: JSONObject, dpd: JSONObject): PaliData {
+            val gmap = HashMap<String, Pair<String, String>>()
+            val gloss = pali.getJSONObject("glossary")
+            for (k in gloss.keys()) {
+                val o = gloss.getJSONObject(k)
+                gmap[k] = Pair(o.optString("en"), o.optString("zh"))
+            }
+            val glossAkk = gmap.map { (k, v) -> GlossAkk(k, toAkk(k), v.first, v.second) }
+
+            val rootForms = ArrayList<RootEntry>()
+            val ra = pali.getJSONArray("roots")
+            for (i in 0 until ra.length()) {
+                val o = ra.getJSONObject(i)
+                val fa = o.getJSONArray("forms")
+                val forms = ArrayList<Pair<String, List<String>>>()
+                for (j in 0 until fa.length()) { val f = fa.getString(j); forms.add(Pair(f, toAkk(f))) }
+                rootForms.add(RootEntry(o.optString("root"), o.optString("en"), o.optString("zh"), forms))
+            }
+
+            val prefixesAll = ArrayList<AffixEntry>()
+            for (key in listOf("upasagga", "prefixExtra")) {
+                val arr = pali.optJSONArray(key) ?: continue
+                for (i in 0 until arr.length()) {
+                    val o = arr.getJSONObject(i)
+                    prefixesAll.add(AffixEntry(o.optString("form"), o.optString("en"), o.optString("zh"), toAkk(o.optString("form"))))
+                }
+            }
+
+            val endings = ArrayList<EndingEntry>()
+            val ea = pali.getJSONArray("endings")
+            for (i in 0 until ea.length()) {
+                val o = ea.getJSONObject(i)
+                endings.add(EndingEntry(o.optString("end"), o.optString("en"), o.optString("zh"), toAkk(o.optString("end"))))
+            }
+            endings.sortByDescending { it.akk.size }
+
+            return PaliData(gmap, dpd, rootForms, prefixesAll, endings, glossAkk)
         }
     }
 }

@@ -34,8 +34,9 @@ final class KeyboardViewController: UIInputViewController {
         stack.spacing = 5
         stack.translatesAutoresizingMaskIntoConstraints = false
 
-        suggestion.font = .systemFont(ofSize: 17)
+        suggestion.font = .systemFont(ofSize: 15)
         suggestion.textAlignment = .center
+        suggestion.numberOfLines = 2
         suggestion.adjustsFontSizeToFitWidth = true
         suggestion.minimumScaleFactor = 0.6
 
@@ -140,11 +141,19 @@ final class KeyboardViewController: UIInputViewController {
     private func refresh() {
         if buffer.isEmpty { suggestion.text = scriptLabel(); return }
         let iast = PaliEngine.transliterate(buffer, script: .roman, smartNasal: smartNasal)
+        let out = converted
+        var line1 = out
         if let g = data?.lookup(iast) {
             let zh = g.zh.isEmpty ? "" : " · \(g.zh)"
-            suggestion.text = "\(converted)    \(g.en)\(zh)"
-        } else {
-            suggestion.text = converted
+            line1 = "\(out)    \(g.en)\(zh)"
         }
+        // morphological split (prefix + root/word + ending)
+        var split: String? = nil
+        if let d = data, let a = d.analyze(d.toAkk(iast), limit: 1).first {
+            let pf = a.prefixes.map { "\($0.form)-" }.joined()
+            let end = a.ending.map { " -\($0.end)" } ?? ""
+            split = "\(pf)\(a.stem.label)\(end)"
+        }
+        suggestion.text = (split != nil && split != out) ? "\(line1)\n\(split!)" : line1
     }
 }

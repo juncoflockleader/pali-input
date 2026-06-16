@@ -44,8 +44,9 @@ class PaliInputMethodService : InputMethodService() {
         }
 
         suggestion = TextView(this).apply {
-            textSize = 18f
-            setPadding(24, 16, 24, 16)
+            textSize = 16f
+            maxLines = 2
+            setPadding(24, 12, 24, 12)
             gravity = Gravity.CENTER_VERTICAL
         }
         root.addView(suggestion)
@@ -119,11 +120,20 @@ class PaliInputMethodService : InputMethodService() {
         }
         val out = converted
         ic?.setComposingText(out, 1)
-        val g = data?.lookup(PaliEngine.transliterate(buffer.toString(), PaliScript.ROMAN, smartNasal))
-        suggestion.text = if (g != null) {
+        val iast = PaliEngine.transliterate(buffer.toString(), PaliScript.ROMAN, smartNasal)
+        val d = data
+        val g = d?.lookup(iast)
+        val line1 = if (g != null) {
             val zh = if (g.zh.isEmpty()) "" else " · ${g.zh}"
             "$out   ${g.en}$zh"
         } else out
+        // morphological split (prefix + root/word + ending)
+        val split = d?.analyze(PaliData.toAkk(iast), 1)?.firstOrNull()?.let { a ->
+            val pf = a.prefixes.joinToString("") { it.form + "-" }
+            val end = a.ending?.let { " -" + it.end } ?: ""
+            "$pf${a.stem.label}$end"
+        }
+        suggestion.text = if (split != null && split != out) "$line1\n$split" else line1
     }
 
     private fun commitWord() {
