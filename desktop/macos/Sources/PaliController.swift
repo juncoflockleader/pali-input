@@ -16,6 +16,7 @@ final class PaliController: IMKInputController {
     private var smartNasal = true
 
     private let notFound = NSRange(location: NSNotFound, length: 0)
+    private let info = InfoPanel.shared
 
     override init!(server: IMKServer!, delegate: Any!, client inputClient: Any!) {
         super.init(server: server, delegate: delegate, client: inputClient)
@@ -91,6 +92,7 @@ final class PaliController: IMKInputController {
     private func updatePreedit(_ client: IMKTextInput) {
         if buffer.isEmpty {
             client.setMarkedText("", selectionRange: NSRange(location: 0, length: 0), replacementRange: notFound)
+            info.hide()
             return
         }
         let text = converted
@@ -99,12 +101,29 @@ final class PaliController: IMKInputController {
         ])
         let end = (text as NSString).length
         client.setMarkedText(attr, selectionRange: NSRange(location: end, length: 0), replacementRange: notFound)
+        updateInfo(client, converted: text)
+    }
+
+    // Show the meaning + morphological split of the word being composed.
+    private func updateInfo(_ client: IMKTextInput, converted: String) {
+        guard let data = PaliData.shared else { info.hide(); return }
+        let iast = PaliEngine.transliterate(buffer, script: .roman, smartNasal: smartNasal)
+        let gloss = data.lookup(iast)
+        let analyses = data.analyze(data.toAkk(iast), limit: 2)
+        if gloss == nil && analyses.isEmpty { info.hide(); return }
+
+        var rect = NSRect.zero
+        _ = client.attributes(forCharacterIndex: 0, lineHeightRectangle: &rect)
+        info.update(converted: converted,
+                    iast: script == .roman ? nil : iast,
+                    gloss: gloss, analyses: analyses, at: rect)
     }
 
     private func commit(_ client: IMKTextInput) {
         guard !buffer.isEmpty else { return }
         client.insertText(converted, replacementRange: notFound)
         buffer = ""
+        info.hide()
     }
 
     override func commitComposition(_ sender: Any!) {

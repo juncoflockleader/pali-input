@@ -19,16 +19,27 @@ RES="$APP/Contents/Resources"
 rm -rf "$APP"
 mkdir -p "$MACOS" "$RES"
 
+# Refresh the bundled data (glossary + roots) from the web app, if node is
+# available; otherwise use the committed Resources/pali-data.json.
+if command -v node >/dev/null 2>&1; then
+  echo "• regenerating pali-data.json…"
+  node tools/gen-data.cjs || echo "  (gen-data skipped)"
+fi
+
 echo "• compiling…"
 # main.swift carries top-level code (the IMKServer bootstrap); the test file is
 # excluded from the app build.
 swiftc -O \
   -framework Cocoa -framework InputMethodKit \
-  Sources/PaliEngine.swift Sources/PaliController.swift Sources/main.swift \
+  Sources/PaliEngine.swift Sources/PaliData.swift Sources/InfoPanel.swift \
+  Sources/PaliController.swift Sources/main.swift \
   -o "$MACOS/PaliIME"
 
 cp Info.plist "$APP/Contents/Info.plist"
 plutil -lint "$APP/Contents/Info.plist" >/dev/null
+
+# Bundle the glossary / root data so the info panel can look words up.
+cp Resources/pali-data.json "$RES/"
 
 # Ad-hoc codesign so the bundle loads on the local machine.
 codesign --force --sign - "$APP" 2>/dev/null || echo "  (codesign skipped)"

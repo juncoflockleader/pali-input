@@ -5,6 +5,13 @@ underlined pre-edit shows the converted Pali; space / return / punctuation
 commits it. Switch the target script (IAST / Devanāgarī / Sinhala / Thai /
 Myanmar) and toggle smart correction from the input-method menu.
 
+While you compose, a small floating **info panel** appears beside the caret
+showing the same hints as the web app: the word's English/Chinese **gloss**
+and a **morphological split** (prefix + root/word + ending) — e.g. typing
+`anugacchati` shows `anu- √gam -ti` with “to go”. It's informational only
+(never takes focus). The data (169 glosses, 685 roots) is bundled as
+`Resources/pali-data.json`, generated from the web app by `tools/gen-data.cjs`.
+
 ## Requirements
 
 - macOS 11+
@@ -35,18 +42,22 @@ No Xcode project: `build.sh` compiles the Swift sources, assembles the
 ```
 Sources/
   PaliEngine.swift       transliteration engine (Swift port of pali.js)
-  PaliController.swift   IMKInputController: buffer, pre-edit, commit, menu
-  PaliEngineTest.swift   28 assertions vs. the JS engine's expected output
+  PaliData.swift         glossary lookup + morphological splitter (ports predict.js)
+  InfoPanel.swift        floating gloss / analysis panel beside the caret
+  PaliController.swift   IMKInputController: buffer, pre-edit, commit, menu, info
+  PaliEngineTest.swift   35 assertions vs. the JS engine + glossary/analysis
   main.swift             IMKServer bootstrap
+Resources/pali-data.json glossary + roots (generated; bundled into the .app)
+tools/gen-data.cjs       regenerates pali-data.json from the web app's data
 Info.plist               IMK input-method registration
-build.sh                 compile + assemble + (optionally) install
+build.sh                 (regen data) + compile + assemble + (optionally) install
 ```
 
-## Test the engine
+## Test the engine + data
 
 ```bash
-swiftc -parse-as-library Sources/PaliEngine.swift Sources/PaliEngineTest.swift -o /tmp/palitest && /tmp/palitest
-# => 28 passed, 0 failed
+swiftc -parse-as-library Sources/PaliEngine.swift Sources/PaliData.swift Sources/PaliEngineTest.swift -o /tmp/palitest && /tmp/palitest
+# => 35 passed, 0 failed   (run from desktop/macos so Resources/ resolves)
 ```
 
 ## Notes / limitations

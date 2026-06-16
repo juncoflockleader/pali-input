@@ -56,6 +56,29 @@ struct EngineTests {
         eq("buddha", .myanmar, "ဗုဒ္ဓ")
         eq("mettaa", .myanmar, "မေတ္တာ")
 
+        // --- PaliData: glossary lookup + morphological analysis ---
+        if let pd = PaliData(url: URL(fileURLWithPath: "Resources/pali-data.json")) {
+            func gloss(_ w: String, _ zh: String) {
+                if pd.lookup(w)?.zh == zh { pass += 1 } else { fail += 1; print("FAIL gloss \(w) -> \(pd.lookup(w)?.zh ?? "nil")") }
+            }
+            gloss("buddha", "佛；觉者")
+            gloss("mettā", "慈；慈爱")
+            if let r = pd.lookup("buddhaṃ"), r.stem, r.key == "buddha" { pass += 1 } else { fail += 1; print("FAIL stem buddhaṃ") }
+
+            func hasA(_ w: String, _ pred: (Analysis) -> Bool, _ msg: String) {
+                let a = pd.analyze(pd.toAkk(w), limit: 3)
+                if a.contains(where: pred) { pass += 1 }
+                else { fail += 1; print("FAIL analyze \(msg): \(a.map { $0.prefixes.map { $0.form }.joined(separator: "+") + "|" + $0.stem.label + "|" + ($0.ending?.end ?? "") })") }
+            }
+            hasA("dhammassa", { $0.stem.label == "dhamma" && $0.ending?.end == "assa" }, "dhammassa")
+            hasA("gacchati", { $0.stem.label == "√gam" || $0.stem.label == "gacchati" }, "gacchati")
+            hasA("anugacchati", { $0.prefixes.contains { $0.form == "anu" } && $0.stem.label == "√gam" }, "anugacchati")
+            hasA("anattā", { $0.prefixes.contains { $0.form == "an" } && $0.stem.label == "attā" }, "anattā")
+        } else {
+            fail += 1
+            print("FAIL: could not load Resources/pali-data.json (run from desktop/macos)")
+        }
+
         print("\n\(pass) passed, \(fail) failed")
         exit(fail == 0 ? 0 : 1)
     }
