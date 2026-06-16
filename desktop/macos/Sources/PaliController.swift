@@ -110,13 +110,14 @@ final class PaliController: IMKInputController {
         let iast = PaliEngine.transliterate(buffer, script: .roman, smartNasal: smartNasal)
         let gloss = data.lookup(iast)
         let analyses = data.analyze(data.toAkk(iast), limit: 2)
-        if gloss == nil && analyses.isEmpty { info.hide(); return }
+        let completions = data.completeWord(iast, limit: 6)
+        if gloss == nil && analyses.isEmpty && completions.isEmpty { info.hide(); return }
 
         var rect = NSRect.zero
         _ = client.attributes(forCharacterIndex: 0, lineHeightRectangle: &rect)
         info.update(converted: converted,
                     iast: script == .roman ? nil : iast,
-                    gloss: gloss, analyses: analyses, at: rect)
+                    gloss: gloss, analyses: analyses, completions: completions, at: rect)
     }
 
     private func commit(_ client: IMKTextInput) {

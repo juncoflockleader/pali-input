@@ -19,9 +19,9 @@ roughly prioritized. Checked = shipped.
 
 ## A. Prediction / suggestions
 
-- [x] **Word completion (单词补全)** — *web done.* Prefix-matches a
-      frequency-ranked word list in the 补全 candidate row, click to insert.
-      Next: wire into the native apps (macOS/iOS/Android).
+- [x] **Word completion (单词补全)** — *all platforms.* Prefix-matches a
+      frequency-ranked word list; click/tap to insert. Web 补全 row; iOS &
+      Android tappable completion strip; macOS info-panel completion line.
 - [x] **Frequency ranking** — `tools/build-freq-words.cjs` sums DPD
       `freq_data.CstFreq` per lemma → `freq-words.json` (top 8k). Curated core
       vocabulary is boosted (DPD freq is empty for some core words, e.g.

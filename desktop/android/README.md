@@ -1,8 +1,9 @@
 # Pali Keyboard — Android (InputMethodService)
 
 A native Android keyboard. Type romanized Pali (Velthuis); the converted Pali
-is shown as composing (underlined) text inline and in the suggestion bar with
-its English/Chinese gloss. A key cycles the output script (IAST / Devanāgarī /
+is shown as composing (underlined) text inline, a tappable **completion strip**
+suggests frequency-ranked whole words, and the suggestion bar shows the gloss +
+morphological split. A key cycles the output script (IAST / Devanāgarī /
 Sinhala / Thai / Myanmar); the globe opens the keyboard picker.
 
 ## Layout

@@ -1,9 +1,10 @@
 # Pali Keyboard — iOS (custom keyboard extension)
 
 A native iOS keyboard. Type romanized Pali (Velthuis); the converted Pali is
-inserted live and the suggestion bar shows it with its English/Chinese gloss.
-A key cycles the output script (IAST / Devanāgarī / Sinhala / Thai / Myanmar);
-the globe switches keyboards.
+inserted live, a tappable **completion strip** suggests frequency-ranked whole
+words, and the suggestion bar shows the gloss + morphological split. A key
+cycles the output script (IAST / Devanāgarī / Sinhala / Thai / Myanmar); the
+globe switches keyboards.
 
 **The engine is shared, not duplicated** — `KeyboardViewController.swift` reuses
 [`../macos/Sources/PaliEngine.swift`](../macos/Sources/PaliEngine.swift) and
@@ -35,7 +36,7 @@ an Xcode project:
 3. In the extension target, replace its `KeyboardViewController.swift` with this
    one, and **add to the target**:
    - `../macos/Sources/PaliEngine.swift`, `../macos/Sources/PaliData.swift`
-   - `../macos/Resources/pali-data.json`, `../macos/Resources/dpd-dict.json`
+   - `../macos/Resources/pali-data.json`, `dpd-dict.json`, `freq-words.json`
      (Build Phases → Copy Bundle Resources)
 4. Use this folder's `Info.plist` (or merge its `NSExtension` block).
 5. Run on a device/simulator, then **Settings → General → Keyboard → Keyboards

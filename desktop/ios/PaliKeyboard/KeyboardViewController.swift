@@ -20,6 +20,8 @@ final class KeyboardViewController: UIInputViewController {
 
     private let suggestion = UILabel()
     private var scriptButton: UIButton?
+    private let completionScroll = UIScrollView()
+    private let completionStack = UIStackView()
 
     private let rows = ["qwertyuiop", "asdfghjkl", "zxcvbnm"]
     private let scripts: [(PaliScript, String)] = [
@@ -40,10 +42,27 @@ final class KeyboardViewController: UIInputViewController {
         suggestion.adjustsFontSizeToFitWidth = true
         suggestion.minimumScaleFactor = 0.6
 
+        // tappable completion strip (frequency-ranked whole words)
+        completionScroll.showsHorizontalScrollIndicator = false
+        completionStack.axis = .horizontal
+        completionStack.spacing = 6
+        completionStack.translatesAutoresizingMaskIntoConstraints = false
+        completionScroll.addSubview(completionStack)
+        let cg = completionScroll.contentLayoutGuide
+        NSLayoutConstraint.activate([
+            completionStack.leadingAnchor.constraint(equalTo: cg.leadingAnchor, constant: 4),
+            completionStack.trailingAnchor.constraint(equalTo: cg.trailingAnchor, constant: -4),
+            completionStack.topAnchor.constraint(equalTo: cg.topAnchor),
+            completionStack.bottomAnchor.constraint(equalTo: cg.bottomAnchor),
+            completionStack.heightAnchor.constraint(equalTo: completionScroll.frameLayoutGuide.heightAnchor),
+            completionScroll.heightAnchor.constraint(equalToConstant: 38),
+        ])
+
         let topStack = UIStackView()
         topStack.axis = .vertical
         topStack.spacing = 5
         topStack.translatesAutoresizingMaskIntoConstraints = false
+        topStack.addArrangedSubview(completionScroll)
         topStack.addArrangedSubview(suggestion)
         topStack.addArrangedSubview(stack)
 
@@ -138,9 +157,33 @@ final class KeyboardViewController: UIInputViewController {
     }
     private func scriptLabel() -> String { scripts.first { $0.0 == script }?.1 ?? "IAST" }
 
+    private func updateCompletions(_ iast: String) {
+        completionStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        guard let d = data else { return }
+        for c in d.completeWord(iast, limit: 10) {
+            let b = UIButton(type: .system)
+            var cfg = UIButton.Configuration.gray()
+            cfg.title = c.w
+            cfg.buttonSize = .small
+            b.configuration = cfg
+            b.addAction(UIAction { [weak self] _ in self?.acceptCompletion(c.w) }, for: .touchUpInside)
+            completionStack.addArrangedSubview(b)
+        }
+    }
+    // The engine accepts IAST input directly, so set the buffer to the lemma.
+    private func acceptCompletion(_ lemma: String) {
+        buffer = lemma
+        replaceInserted()
+    }
+
     private func refresh() {
-        if buffer.isEmpty { suggestion.text = scriptLabel(); return }
+        if buffer.isEmpty {
+            suggestion.text = scriptLabel()
+            completionStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+            return
+        }
         let iast = PaliEngine.transliterate(buffer, script: .roman, smartNasal: smartNasal)
+        updateCompletions(iast)
         let out = converted
         var line1 = out
         if let g = data?.lookup(iast) {

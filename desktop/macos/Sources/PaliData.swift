@@ -21,6 +21,7 @@ private struct Bundled: Codable {
 
 // Lookup / analysis results
 struct GlossResult { let en: String; let zh: String; let key: String; let stem: Bool }
+struct Completion { let w: String; let en: String }
 struct StemMatch { let kind: String; let label: String; let en: String; let zh: String } // kind: root/word/raw
 struct PrefixHit { let form: String; let en: String; let zh: String }
 struct EndingHit { let end: String; let en: String; let zh: String }
@@ -37,17 +38,19 @@ final class PaliData {
     static let shared: PaliData? = {
         guard let url = Bundle.main.url(forResource: "pali-data", withExtension: "json") else { return nil }
         let dpdURL = Bundle.main.url(forResource: "dpd-dict", withExtension: "json")
-        return PaliData(url: url, dpdURL: dpdURL)
+        let freqURL = Bundle.main.url(forResource: "freq-words", withExtension: "json")
+        return PaliData(url: url, dpdURL: dpdURL, freqURL: freqURL)
     }()
 
     private let data: Bundled
     private let dpd: [String: String]   // full DPD lemma -> English meaning (75k+)
+    private let freqWords: [(w: String, en: String)]  // frequency-ranked, for completion
     private let rootForms: [(root: Root, forms: [(form: String, akk: [String])])]
     private let prefixesAll: [(aff: Affix, akk: [String])]
     private let endingsSorted: [(end: Ending, akk: [String])]
     private let glossAkk: [(w: String, akk: [String], en: String, zh: String)]
 
-    init?(url: URL, dpdURL: URL? = nil) {
+    init?(url: URL, dpdURL: URL? = nil, freqURL: URL? = nil) {
         guard let raw = try? Data(contentsOf: url),
               let d = try? JSONDecoder().decode(Bundled.self, from: raw) else { return nil }
         data = d
@@ -56,6 +59,18 @@ final class PaliData {
             dpd = dd
         } else {
             dpd = [:]
+        }
+        // freq-words.json is an array of [lemma, freq, meaning], pre-sorted by
+        // frequency; parsed loosely (heterogeneous arrays) via JSONSerialization.
+        if let fu = freqURL, let fraw = try? Data(contentsOf: fu),
+           let arr = try? JSONSerialization.jsonObject(with: fraw) as? [[Any]] {
+            freqWords = arr.compactMap { row in
+                guard let w = row.first as? String else { return nil }
+                let en = row.count >= 3 ? (row[2] as? String ?? "") : ""
+                return (w, en)
+            }
+        } else {
+            freqWords = []
         }
         func toA(_ s: String) -> [String] {
             PaliEngine.tokenize(s, smartNasal: false).filter { $0.type != .other }.map { $0.iast }
@@ -107,6 +122,18 @@ final class PaliData {
             if let m = dpd[k2] { return GlossResult(en: m, zh: "", key: k2, stem: true) }
         }
         return nil
+    }
+
+    // MARK: word completion (frequency-ranked; freqWords is pre-sorted)
+    func completeWord(_ prefix: String, limit: Int = 6) -> [Completion] {
+        let p = prefix.lowercased()
+        if p.isEmpty { return [] }
+        var out: [Completion] = []
+        for e in freqWords where e.w.count > p.count && e.w.hasPrefix(p) {
+            out.append(Completion(w: e.w, en: e.en))
+            if out.count >= limit { break }
+        }
+        return out
     }
 
     // MARK: morphological split (prefix + root/word + ending)

@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Gravity
 import android.widget.Button
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
 
@@ -23,6 +24,7 @@ class PaliInputMethodService : InputMethodService() {
     private var data: PaliData? = null
 
     private lateinit var suggestion: TextView
+    private lateinit var completionRow: LinearLayout
 
     private val scripts = listOf(
         PaliScript.ROMAN to "IAST", PaliScript.DEVANAGARI to "देव", PaliScript.SINHALA to "සිං",
@@ -42,6 +44,11 @@ class PaliInputMethodService : InputMethodService() {
             orientation = LinearLayout.VERTICAL
             layoutParams = ViewGroup.LayoutParams(MATCH, WRAP)
         }
+
+        // tappable completion strip (frequency-ranked whole-word suggestions)
+        completionRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        val compScroll = HorizontalScrollView(this).apply { isFillViewport = false; addView(completionRow) }
+        root.addView(compScroll)
 
         suggestion = TextView(this).apply {
             textSize = 16f
@@ -116,12 +123,14 @@ class PaliInputMethodService : InputMethodService() {
         val ic = currentInputConnection
         if (buffer.isEmpty()) {
             suggestion.text = scriptLabel()
+            completionRow.removeAllViews()
             return
         }
         val out = converted
         ic?.setComposingText(out, 1)
         val iast = PaliEngine.transliterate(buffer.toString(), PaliScript.ROMAN, smartNasal)
         val d = data
+        populateCompletions(d, iast)
         val g = d?.lookup(iast)
         val line1 = if (g != null) {
             val zh = if (g.zh.isEmpty()) "" else " · ${g.zh}"
@@ -136,10 +145,30 @@ class PaliInputMethodService : InputMethodService() {
         suggestion.text = if (split != null && split != out) "$line1\n$split" else line1
     }
 
+    // Frequency-ranked whole-word completions, tappable to accept.
+    private fun populateCompletions(d: PaliData?, iast: String) {
+        completionRow.removeAllViews()
+        if (d == null) return
+        for (c in d.completeWord(iast, 8)) {
+            val b = Button(this)
+            b.text = c.first
+            b.isAllCaps = false
+            b.setOnClickListener { acceptCompletion(c.first) }
+            completionRow.addView(b)
+        }
+    }
+    // The engine accepts IAST input directly, so set the buffer to the lemma.
+    private fun acceptCompletion(lemma: String) {
+        buffer.setLength(0)
+        buffer.append(lemma)
+        refresh()
+    }
+
     private fun commitWord() {
         currentInputConnection?.finishComposingText()
         buffer.setLength(0)
         suggestion.text = scriptLabel()
+        completionRow.removeAllViews()
     }
 
     private fun cycleScript(b: Button) {

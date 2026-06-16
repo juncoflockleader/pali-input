@@ -50,7 +50,7 @@ final class InfoPanel {
 
     func hide() { panel.orderOut(nil) }
 
-    func update(converted: String, iast: String?, gloss: GlossResult?, analyses: [Analysis], at rect: NSRect) {
+    func update(converted: String, iast: String?, gloss: GlossResult?, analyses: [Analysis], completions: [Completion], at rect: NSRect) {
         let s = NSMutableAttributedString()
 
         let head = converted + (iast.map { "   " + $0 } ?? "")
@@ -68,6 +68,12 @@ final class InfoPanel {
         for a in analyses {
             s.append(NSAttributedString(string: "\n"))
             s.append(analysisLine(a))
+        }
+        if !completions.isEmpty {
+            let words = completions.prefix(6).map { $0.w }.joined(separator: "  ")
+            s.append(NSAttributedString(string: "\n补全 " + words, attributes: [
+                .font: NSFont.systemFont(ofSize: 11),
+                .foregroundColor: NSColor.tertiaryLabelColor]))
         }
         label.attributedStringValue = s
 

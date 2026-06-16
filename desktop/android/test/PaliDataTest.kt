@@ -14,7 +14,8 @@ fun main() {
 
     val pali = File("app/src/main/assets/pali-data.json").readText()
     val dpd = File("app/src/main/assets/dpd-dict.json").readText()
-    val pd = PaliData.fromJson(pali, dpd)
+    val freq = File("app/src/main/assets/freq-words.json").readText()
+    val pd = PaliData.fromJson(pali, dpd, freq)
 
     // gloss lookup
     check(pd.lookup("buddha")?.zh == "佛；觉者", "gloss buddha")
@@ -33,6 +34,11 @@ fun main() {
     hasA("gacchati", { it.stem.label == "√gam" || it.stem.label == "gacchati" }, "gacchati")
     hasA("anugacchati", { a -> a.prefixes.any { it.form == "anu" } && a.stem.label == "√gam" }, "anugacchati")
     hasA("anattā", { a -> a.prefixes.any { it.form == "an" } && a.stem.label == "attā" }, "anattā")
+
+    // word completion
+    check(pd.completeWord("nibb", 6).any { it.first == "nibbāna" }, "completeWord nibb -> nibbāna")
+    check(pd.completeWord("dhamma", 6).none { it.first == "dhamma" }, "completeWord skips exact")
+    check(pd.completeWord("", 6).isEmpty(), "completeWord empty prefix")
 
     println("\n$pass passed, $fail failed")
     exitProcess(if (fail == 0) 0 else 1)

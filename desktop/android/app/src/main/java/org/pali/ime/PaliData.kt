@@ -8,6 +8,7 @@
 package org.pali.ime
 
 import android.content.Context
+import org.json.JSONArray
 import org.json.JSONObject
 
 data class GlossResult(val en: String, val zh: String, val key: String, val stem: Boolean)
@@ -31,6 +32,7 @@ class PaliData private constructor(
     private val prefixesAll: List<AffixEntry>,
     private val endingsSorted: List<EndingEntry>,
     private val glossAkk: List<GlossAkk>,
+    private val freqWords: List<Triple<String, Int, String>>, // pre-sorted by freq desc
 ) {
     private class RootEntry(val root: String, val en: String, val zh: String, val forms: List<Pair<String, List<String>>>)
     private class AffixEntry(val form: String, val en: String, val zh: String, val akk: List<String>)
@@ -48,6 +50,20 @@ class PaliData private constructor(
     }
     private fun stemKey(k: String): String? =
         if (k.isNotEmpty() && (k.last() == 'ṃ' || k.last() == 'm')) k.dropLast(1) else null
+
+    // MARK: word completion (frequency-ranked; freqWords is pre-sorted)
+    fun completeWord(prefix: String, limit: Int = 6): List<Pair<String, String>> {
+        val p = prefix.lowercase()
+        if (p.isEmpty()) return emptyList()
+        val out = ArrayList<Pair<String, String>>()
+        for (t in freqWords) {
+            if (t.first.length > p.length && t.first.startsWith(p)) {
+                out.add(Pair(t.first, t.third))
+                if (out.size >= limit) break
+            }
+        }
+        return out
+    }
 
     // MARK: akkhara helpers (lenient nasals / final-m)
     private fun akkEq(u: String, l: String): Boolean {
@@ -152,13 +168,14 @@ class PaliData private constructor(
         fun load(ctx: Context): PaliData {
             val pt = ctx.assets.open("pali-data.json").bufferedReader().use { it.readText() }
             val dt = ctx.assets.open("dpd-dict.json").bufferedReader().use { it.readText() }
-            return build(JSONObject(pt), JSONObject(dt))
+            val ft = ctx.assets.open("freq-words.json").bufferedReader().use { it.readText() }
+            return build(JSONObject(pt), JSONObject(dt), ft)
         }
         // For JVM tests: construct from JSON text directly.
-        fun fromJson(paliText: String, dpdText: String): PaliData =
-            build(JSONObject(paliText), JSONObject(dpdText))
+        fun fromJson(paliText: String, dpdText: String, freqText: String): PaliData =
+            build(JSONObject(paliText), JSONObject(dpdText), freqText)
 
-        private fun build(pali: JSONObject, dpd: JSONObject): PaliData {
+        private fun build(pali: JSONObject, dpd: JSONObject, freqText: String): PaliData {
             val gmap = HashMap<String, Pair<String, String>>()
             val gloss = pali.getJSONObject("glossary")
             for (k in gloss.keys()) {
@@ -194,7 +211,14 @@ class PaliData private constructor(
             }
             endings.sortByDescending { it.akk.size }
 
-            return PaliData(gmap, dpd, rootForms, prefixesAll, endings, glossAkk)
+            val freqWords = ArrayList<Triple<String, Int, String>>()
+            val fa = JSONArray(freqText)
+            for (i in 0 until fa.length()) {
+                val row = fa.getJSONArray(i)
+                freqWords.add(Triple(row.getString(0), row.optInt(1, 0), if (row.length() >= 3) row.optString(2) else ""))
+            }
+
+            return PaliData(gmap, dpd, rootForms, prefixesAll, endings, glossAkk, freqWords)
         }
     }
 }
