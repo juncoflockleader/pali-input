@@ -54,8 +54,10 @@ roughly prioritized. Checked = shipped.
 
 - [x] **LICENSE** — MIT for our code; DPD data stays CC BY-NC-SA (see
       [NOTICE.md](NOTICE.md)).
-- [ ] **CI** (GitHub Actions): run all suites on push — web (Node), Swift,
-      Kotlin (engine + analyzer), Keyman simulator.
+- [x] **CI** (GitHub Actions, `.github/workflows/ci.yml`): every push runs web
+      (Node) + Keyman simulator, Swift engine/data + macOS build + iOS
+      type-check, and Kotlin engine/analyzer + Android type-check. Status badge
+      in the README.
 - [ ] Dedupe the bundled DPD dict (currently copied to macOS Resources +
       Android assets) via a build step.
 - [ ] Commit a buildable iOS Xcode project (e.g. XcodeGen spec).
