@@ -185,11 +185,15 @@ final class KeyboardViewController: UIInputViewController {
         let iast = PaliEngine.transliterate(buffer, script: .roman, smartNasal: smartNasal)
         updateCompletions(iast)
         let out = converted
+        let g = data?.lookup(iast)
         var line1 = out
-        if let g = data?.lookup(iast) {
+        if let g = g {
             let zh = g.zh.isEmpty ? "" : " · \(g.zh)"
             line1 = "\(out)    \(g.en)\(zh)"
         }
+        // compound (samāsa) split
+        let compound = data?.splitCompound(iast, lemma: g?.key) ?? []
+        if !compound.isEmpty { line1 += "   ⊕ " + compound.joined(separator: " + ") }
         // morphological split (prefix + root/word + ending)
         var split: String? = nil
         if let d = data, let a = d.analyze(d.toAkk(iast), limit: 1).first {

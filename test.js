@@ -252,5 +252,15 @@ function resolve(w) {
   assert(!resolve('xyzzy'), 'inflect unknown -> none');
 }
 
+// --- Compound (samāsa) split ------------------------------------------------
+{
+  const CMP = require('./compounds.json');
+  const sc = (w) => P.splitCompound(w, CMP);
+  assert(JSON.stringify(sc('satipaṭṭhāna')) === JSON.stringify(['sati', 'upaṭṭhāna']), 'split satipaṭṭhāna');
+  assert(JSON.stringify(sc('buddhānussati')) === JSON.stringify(['buddha', 'anussati']), 'split buddhānussati');
+  assert(sc('buddha') === null, 'split non-compound buddha -> null');
+  assert(JSON.stringify(P.splitCompound('satipaṭṭhānaṃ', CMP)) === JSON.stringify(['sati', 'upaṭṭhāna']), 'split strips trailing ṃ');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

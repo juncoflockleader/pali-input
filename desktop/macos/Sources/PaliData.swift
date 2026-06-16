@@ -39,21 +39,29 @@ final class PaliData {
         guard let url = Bundle.main.url(forResource: "pali-data", withExtension: "json") else { return nil }
         let dpdURL = Bundle.main.url(forResource: "dpd-dict", withExtension: "json")
         let freqURL = Bundle.main.url(forResource: "freq-words", withExtension: "json")
-        return PaliData(url: url, dpdURL: dpdURL, freqURL: freqURL)
+        let compURL = Bundle.main.url(forResource: "compounds", withExtension: "json")
+        return PaliData(url: url, dpdURL: dpdURL, freqURL: freqURL, compoundsURL: compURL)
     }()
 
     private let data: Bundled
     private let dpd: [String: String]   // full DPD lemma -> English meaning (75k+)
     private let freqWords: [(w: String, en: String)]  // frequency-ranked, for completion
+    private let compounds: [String: [String]]  // compound lemma -> member lemmas
     private let rootForms: [(root: Root, forms: [(form: String, akk: [String])])]
     private let prefixesAll: [(aff: Affix, akk: [String])]
     private let endingsSorted: [(end: Ending, akk: [String])]
     private let glossAkk: [(w: String, akk: [String], en: String, zh: String)]
 
-    init?(url: URL, dpdURL: URL? = nil, freqURL: URL? = nil) {
+    init?(url: URL, dpdURL: URL? = nil, freqURL: URL? = nil, compoundsURL: URL? = nil) {
         guard let raw = try? Data(contentsOf: url),
               let d = try? JSONDecoder().decode(Bundled.self, from: raw) else { return nil }
         data = d
+        if let cu = compoundsURL, let craw = try? Data(contentsOf: cu),
+           let cc = try? JSONDecoder().decode([String: [String]].self, from: craw) {
+            compounds = cc
+        } else {
+            compounds = [:]
+        }
         if let du = dpdURL, let draw = try? Data(contentsOf: du),
            let dd = try? JSONDecoder().decode([String: String].self, from: draw) {
             dpd = dd
@@ -127,6 +135,15 @@ final class PaliData {
             return GlossResult(en: a.stem.en, zh: a.stem.zh, key: a.stem.label, stem: true)
         }
         return nil
+    }
+
+    // MARK: compound (samāsa) split — member lemmas, or [] if not a compound
+    func splitCompound(_ word: String, lemma: String? = nil) -> [String] {
+        let w = word.lowercased()
+        if let m = compounds[w] { return m }
+        if let last = w.last, last == "ṃ" || last == "m", let m = compounds[String(w.dropLast())] { return m }
+        if let l = lemma?.lowercased(), let m = compounds[l] { return m }
+        return []
     }
 
     // MARK: word completion (frequency-ranked; freqWords is pre-sorted)

@@ -136,13 +136,16 @@ class PaliInputMethodService : InputMethodService() {
             val zh = if (g.zh.isEmpty()) "" else " · ${g.zh}"
             "$out   ${g.en}$zh"
         } else out
+        // compound (samāsa) split
+        val compound = d?.splitCompound(iast, g?.key) ?: emptyList()
+        val line1full = if (compound.isNotEmpty()) "$line1   ⊕ ${compound.joinToString(" + ")}" else line1
         // morphological split (prefix + root/word + ending)
         val split = d?.analyze(PaliData.toAkk(iast), 1)?.firstOrNull()?.let { a ->
             val pf = a.prefixes.joinToString("") { it.form + "-" }
             val end = a.ending?.let { " -" + it.end } ?: ""
             "$pf${a.stem.label}$end"
         }
-        suggestion.text = if (split != null && split != out) "$line1\n$split" else line1
+        suggestion.text = if (split != null && split != out) "$line1full\n$split" else line1full
     }
 
     // Frequency-ranked whole-word completions, tappable to accept.

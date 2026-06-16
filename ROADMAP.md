@@ -26,8 +26,10 @@ roughly prioritized. Checked = shipped.
       `freq_data.CstFreq` per lemma → `freq-words.json` (top 8k). Curated core
       vocabulary is boosted (DPD freq is empty for some core words, e.g.
       nibbāna), so a learner's key words always surface first.
-- [ ] **Compound / phrase (词组) suggestions** — known-compound completion;
-      true samāsa splitting needs a corpus (harder).
+- [x] **Compound (samāsa) splitting** — `compounds.json` (24k compound →
+      member lemmas, from DPD's `construction` field, sandhi resolved). Shown
+      with each member's gloss: web 逐词释义 (⊕ line), macOS info panel, iOS &
+      Android suggestion bars. All platforms.
 - [x] **Inflection-aware lookup** — gloss lookup now falls back to the
       morphological splitter, so declined/conjugated forms resolve to their
       lemma's meaning (dhammassa → dhamma, gacchanti → √gam, buddhena → buddha).

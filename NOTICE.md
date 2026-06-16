@@ -13,7 +13,8 @@ The following files are derived from the
 | File | Derived from | Content |
 |------|--------------|---------|
 | `roots.data.js` | DPD `dpd_roots` | 685 verbal roots (English meanings) |
-| `freq-words.json` | DPD `dpd_headwords` | top 8k lemmas by Tipiṭaka frequency, for web word completion (lemma, freq, short English meaning) |
+| `freq-words.json` | DPD `dpd_headwords` | top 8k lemmas by Tipiṭaka frequency, for word completion (lemma, freq, short English meaning) |
+| `compounds.json` | DPD `dpd_headwords` (`construction`) | 24k compound → member-lemma splits (samāsa) |
 | `desktop/macos/Resources/dpd-dict.json` | DPD `dpd_headwords` | ~75.6k lemma → English meaning |
 | `desktop/android/app/src/main/assets/dpd-dict.json` | same | (copy bundled into the Android app) |
 

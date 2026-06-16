@@ -328,6 +328,15 @@ textarea#input:focus {
 .g-en { color: var(--ink-soft); font-style: italic; font-size: 14px; }
 .g-zh { color: var(--ink); font-size: 15px; }
 .g-row.unknown { opacity: .45; }
+.g-parts {
+  grid-column: 1 / -1;
+  margin-top: 3px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+.g-parts b { color: var(--accent); font-weight: 600; }
+.g-parts i { font-style: normal; opacity: .8; }
+.g-parts .plus { color: var(--ink-soft); opacity: .5; margin: 0 2px; }
 .g-empty { color: #c9bca6; font-size: 14px; padding: 6px 2px; }
 .gloss-note {
   margin: 12px 2px 0;

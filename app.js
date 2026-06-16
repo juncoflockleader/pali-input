@@ -29,6 +29,18 @@ function ensureFreqWords() {
     .catch(() => { freqLoading = false; });
 }
 
+// Compound (samāsa) split map — lazy-loaded (~1 MB, ~300 KB gzipped) on first use.
+let compounds = null;
+let compoundsLoading = false;
+function ensureCompounds() {
+  if (compounds || compoundsLoading) return;
+  compoundsLoading = true;
+  fetch('compounds.json')
+    .then((r) => r.json())
+    .then((d) => { compounds = d; render(); })
+    .catch(() => { compoundsLoading = false; });
+}
+
 // Reverse map: IAST akkhara -> how to type it in the ASCII scheme.
 const IAST_TO_INPUT = {
   ā: 'aa', ī: 'ii', ū: 'uu', ṃ: '.m', ṅ: '"n', ñ: '~n',
@@ -328,11 +340,24 @@ function renderGlossary(text) {
       if (a && a.full && a.stem.en) hit = { en: a.stem.en, zh: a.stem.zh, key: a.stem.label, stem: true };
     }
     const stem = hit && hit.stem ? ` <span class="stem">→ ${escapeHtml(hit.key)}</span>` : '';
+    // compound (samāsa) breakdown
+    ensureCompounds();
+    const parts = Predict.splitCompound(iast, compounds, hit && hit.key);
+    let partsHtml = '';
+    if (parts) {
+      const ms = parts.map((m) => {
+        const mg = Glossary.lookup(m);
+        const g = mg ? (mg.zh || mg.en) : '';
+        return `<b>${escapeHtml(m)}</b>${g ? ` <i>${escapeHtml(g)}</i>` : ''}`;
+      }).join(' <span class="plus">+</span> ');
+      partsHtml = `<div class="g-parts">⊕ ${ms}</div>`;
+    }
     rows.push(
-      `<div class="g-row${hit ? '' : ' unknown'}">` +
+      `<div class="g-row${hit || parts ? '' : ' unknown'}">` +
         `<span class="g-pali">${escapeHtml(iast)}${stem}</span>` +
         `<span class="g-en">${hit ? escapeHtml(hit.en) : '—'}</span>` +
         `<span class="g-zh">${hit ? escapeHtml(hit.zh) : '—'}</span>` +
+        partsHtml +
       `</div>`
     );
   }

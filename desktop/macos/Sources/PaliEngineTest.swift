@@ -59,7 +59,8 @@ struct EngineTests {
         // --- PaliData: glossary lookup + morphological analysis ---
         if let pd = PaliData(url: URL(fileURLWithPath: "Resources/pali-data.json"),
                              dpdURL: URL(fileURLWithPath: "Resources/dpd-dict.json"),
-                             freqURL: URL(fileURLWithPath: "Resources/freq-words.json")) {
+                             freqURL: URL(fileURLWithPath: "Resources/freq-words.json"),
+                             compoundsURL: URL(fileURLWithPath: "Resources/compounds.json")) {
             func gloss(_ w: String, _ zh: String) {
                 if pd.lookup(w)?.zh == zh { pass += 1 } else { fail += 1; print("FAIL gloss \(w) -> \(pd.lookup(w)?.zh ?? "nil")") }
             }
@@ -98,6 +99,11 @@ struct EngineTests {
             if nibb.contains("nibbāna") { pass += 1 } else { fail += 1; print("FAIL completeWord nibb -> \(nibb)") }
             if pd.completeWord("dhamma", limit: 6).allSatisfy({ $0.w != "dhamma" }) { pass += 1 } else { fail += 1; print("FAIL completeWord skip exact") }
             if pd.completeWord("", limit: 6).isEmpty { pass += 1 } else { fail += 1; print("FAIL completeWord empty") }
+
+            // compound (samāsa) split
+            if pd.splitCompound("satipaṭṭhāna") == ["sati", "upaṭṭhāna"] { pass += 1 } else { fail += 1; print("FAIL split satipaṭṭhāna -> \(pd.splitCompound("satipaṭṭhāna"))") }
+            if pd.splitCompound("buddhānussati") == ["buddha", "anussati"] { pass += 1 } else { fail += 1; print("FAIL split buddhānussati") }
+            if pd.splitCompound("buddha").isEmpty { pass += 1 } else { fail += 1; print("FAIL split non-compound buddha") }
         } else {
             fail += 1
             print("FAIL: could not load Resources/pali-data.json (run from desktop/macos)")

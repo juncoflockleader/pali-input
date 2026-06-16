@@ -33,6 +33,7 @@ class PaliData private constructor(
     private val endingsSorted: List<EndingEntry>,
     private val glossAkk: List<GlossAkk>,
     private val freqWords: List<Triple<String, Int, String>>, // pre-sorted by freq desc
+    private val compounds: Map<String, List<String>>,         // compound lemma -> members
 ) {
     private class RootEntry(val root: String, val en: String, val zh: String, val forms: List<Pair<String, List<String>>>)
     private class AffixEntry(val form: String, val en: String, val zh: String, val akk: List<String>)
@@ -55,6 +56,15 @@ class PaliData private constructor(
     }
     private fun stemKey(k: String): String? =
         if (k.isNotEmpty() && (k.last() == 'ṃ' || k.last() == 'm')) k.dropLast(1) else null
+
+    // MARK: compound (samāsa) split — member lemmas, or empty if not a compound
+    fun splitCompound(word: String, lemma: String? = null): List<String> {
+        val w = word.lowercase()
+        compounds[w]?.let { return it }
+        if (w.isNotEmpty() && (w.last() == 'ṃ' || w.last() == 'm')) compounds[w.dropLast(1)]?.let { return it }
+        lemma?.lowercase()?.let { l -> compounds[l]?.let { return it } }
+        return emptyList()
+    }
 
     // MARK: word completion (frequency-ranked; freqWords is pre-sorted)
     fun completeWord(prefix: String, limit: Int = 6): List<Pair<String, String>> {
@@ -174,13 +184,14 @@ class PaliData private constructor(
             val pt = ctx.assets.open("pali-data.json").bufferedReader().use { it.readText() }
             val dt = ctx.assets.open("dpd-dict.json").bufferedReader().use { it.readText() }
             val ft = ctx.assets.open("freq-words.json").bufferedReader().use { it.readText() }
-            return build(JSONObject(pt), JSONObject(dt), ft)
+            val ct = ctx.assets.open("compounds.json").bufferedReader().use { it.readText() }
+            return build(JSONObject(pt), JSONObject(dt), ft, ct)
         }
         // For JVM tests: construct from JSON text directly.
-        fun fromJson(paliText: String, dpdText: String, freqText: String): PaliData =
-            build(JSONObject(paliText), JSONObject(dpdText), freqText)
+        fun fromJson(paliText: String, dpdText: String, freqText: String, compoundsText: String): PaliData =
+            build(JSONObject(paliText), JSONObject(dpdText), freqText, compoundsText)
 
-        private fun build(pali: JSONObject, dpd: JSONObject, freqText: String): PaliData {
+        private fun build(pali: JSONObject, dpd: JSONObject, freqText: String, compoundsText: String): PaliData {
             val gmap = HashMap<String, Pair<String, String>>()
             val gloss = pali.getJSONObject("glossary")
             for (k in gloss.keys()) {
@@ -223,7 +234,16 @@ class PaliData private constructor(
                 freqWords.add(Triple(row.getString(0), row.optInt(1, 0), if (row.length() >= 3) row.optString(2) else ""))
             }
 
-            return PaliData(gmap, dpd, rootForms, prefixesAll, endings, glossAkk, freqWords)
+            val comp = HashMap<String, List<String>>()
+            val cj = JSONObject(compoundsText)
+            for (k in cj.keys()) {
+                val arr = cj.getJSONArray(k)
+                val ms = ArrayList<String>(arr.length())
+                for (i in 0 until arr.length()) ms.add(arr.getString(i))
+                comp[k] = ms
+            }
+
+            return PaliData(gmap, dpd, rootForms, prefixesAll, endings, glossAkk, freqWords, comp)
         }
     }
 }

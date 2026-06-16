@@ -263,6 +263,17 @@
     matchAffixes(p, l) { return this._init().matchAffixes(p, l); },
     analyze(p, l) { return this._init().analyze(p, l); },
     toAkk(s) { return this._init().toAkk(s); },
+    // Compound (samāsa) split: return the member lemmas of a compound, or null.
+    // `map` is { lemma: [member, ...] }. Tries the word and a trailing-ṃ/m strip.
+    splitCompound(word, map, lemma) {
+      if (!map) return null;
+      const w = (word || '').toLowerCase();
+      const cands = [w];
+      if (/[ṃm]$/.test(w)) cands.push(w.slice(0, -1));
+      if (lemma) cands.push(String(lemma).toLowerCase());
+      for (const c of cands) if (map[c]) return map[c];
+      return null;
+    },
     // Word completion: prefix-match a frequency-ranked word list (array of
     // [lemma, freq, meaning], pre-sorted by freq desc). Pure — no engine init.
     completeWord(prefix, words, limit) {

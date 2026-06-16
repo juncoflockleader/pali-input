@@ -15,7 +15,8 @@ fun main() {
     val pali = File("app/src/main/assets/pali-data.json").readText()
     val dpd = File("app/src/main/assets/dpd-dict.json").readText()
     val freq = File("app/src/main/assets/freq-words.json").readText()
-    val pd = PaliData.fromJson(pali, dpd, freq)
+    val comp = File("app/src/main/assets/compounds.json").readText()
+    val pd = PaliData.fromJson(pali, dpd, freq, comp)
 
     // gloss lookup
     check(pd.lookup("buddha")?.zh == "佛；觉者", "gloss buddha")
@@ -40,6 +41,11 @@ fun main() {
         val r = pd.lookup(w)
         check(r != null && r.en.isNotEmpty(), "inflect lookup $w")
     }
+
+    // compound (samāsa) split
+    check(pd.splitCompound("satipaṭṭhāna") == listOf("sati", "upaṭṭhāna"), "split satipaṭṭhāna")
+    check(pd.splitCompound("buddhānussati") == listOf("buddha", "anussati"), "split buddhānussati")
+    check(pd.splitCompound("buddha").isEmpty(), "split non-compound buddha")
 
     // word completion
     check(pd.completeWord("nibb", 6).any { it.first == "nibbāna" }, "completeWord nibb -> nibbāna")
