@@ -14,6 +14,18 @@ Type the **pronunciation** of Pali in plain ASCII and get proper Pali script.
 | **ไทย** | 泰文——泰国三藏传统 |
 | **မြန်မာ** | 缅甸文——缅甸三藏传统（实验性，ṅ 连写的 kinzi 形为近似） |
 
+## 桌面输入法 · Desktop IME
+
+除了网页版,还能做成**系统级输入法**(在任何 app 里直接出巴利文),见
+[`desktop/`](desktop/):
+
+- **macOS**(原生 InputMethodKit / Swift):`cd desktop/macos && ./build.sh install`
+  → 在「系统设置 → 键盘 → 输入法」启用「Pali」。引擎是 `pali.js` 的忠实 Swift 移植
+  (28 项测试逐字对齐),菜单可切 5 种文字。
+- **Windows 等**([Keyman](https://keyman.com)):用 Keyman Developer 编译
+  [`desktop/keyman/pali.kmn`](desktop/keyman/pali.kmn),一套源码出
+  Windows/macOS/Linux/web/移动端安装包(v1 输出 IAST)。
+
 ## 使用 · Usage
 
 不需要任何构建步骤。

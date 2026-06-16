@@ -1,0 +1,54 @@
+c Pali — Velthuis → IAST  (Keyman keyboard source)
+c
+c Type romanized Pali in the Velthuis ASCII scheme and get IAST with proper
+c diacritics. Cross-platform: compile with Keyman Developer / kmc to produce
+c installers for Windows, macOS, Linux, web, iOS, Android.
+c
+c   kmc build pali.kmn          # -> pali.kmx (Windows/Linux), pali.js (web)
+c
+c Diacritic outputs use U+ notation so the source is encoding-proof.
+
+store(&VERSION) '10.0'
+store(&NAME) 'Pali — Velthuis to IAST'
+store(&KEYBOARDVERSION) '1.0'
+store(&TARGETS) 'any'
+
+begin Unicode > use(main)
+
+group(main) using keys
+
+c --- long vowels (double the vowel) ---
+'a' + 'a' > U+0101      c ā
+'i' + 'i' > U+012B      c ī
+'u' + 'u' > U+016B      c ū
+'A' + 'a' > U+0100      c Ā
+'I' + 'i' > U+012A      c Ī
+'U' + 'u' > U+016A      c Ū
+
+c --- retroflex / cerebral (Velthuis dot prefix) ---
+'.' + 't' > U+1E6D      c ṭ
+'.' + 'd' > U+1E0D      c ḍ
+'.' + 'n' > U+1E47      c ṇ
+'.' + 'l' > U+1E37      c ḷ
+'.' + 'm' > U+1E43      c ṃ  (niggahīta)
+
+c --- place-specific nasals ---
+'"' + 'n' > U+1E45      c ṅ
+';' + 'n' > U+1E45      c ṅ
+'~' + 'n' > U+00F1      c ñ
+
+c --- smart nasal assimilation: n takes the place of the following stop ---
+'n' + 'k' > U+1E45 'k'  c ṅk
+'n' + 'g' > U+1E45 'g'  c ṅg
+'n' + 'c' > U+00F1 'c'  c ñc
+'n' + 'j' > U+00F1 'j'  c ñj
+
+c --- word-final m -> niggahīta ṃ (committed when you press space) ---
+'m' + ' ' > U+1E43 ' '
+
+c Notes:
+c  - Aspirates (kh gh ch jh th dh ph bh) and retroflex aspirates (ṭh ḍh) need
+c    no rules: in IAST they are just the base letter followed by 'h', which
+c    falls out of typing the keys in order (".th" -> ṭ then h -> "ṭh").
+c  - To keep an explicit niggahīta before a velar/palatal (e.g. saṃgha rather
+c    than saṅgha), type ".m": "sa.mgha" -> saṃgha.

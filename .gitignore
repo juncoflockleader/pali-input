@@ -7,3 +7,9 @@ node_modules/
 
 # Local scratch / preview artifacts
 _*.html
+
+# Desktop IME build artifacts
+desktop/macos/build/
+*.kmx
+*.kmp
+*.js.map

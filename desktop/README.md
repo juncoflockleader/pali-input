@@ -1,0 +1,32 @@
+# 桌面输入法 · Desktop input methods
+
+把这个巴利转写引擎做成**系统级第三方输入法**——能在任何 app(浏览器、Word、
+终端…)里直接出巴利文,而不只是网页转换器。
+
+系统输入法是 OS 组件,不能用网页/Electron 实现,两个平台各一套原生框架。本目录
+两条腿:
+
+| 目录 | 平台 | 框架 | 状态 |
+|------|------|------|------|
+| [`macos/`](macos/) | macOS | InputMethodKit (Swift) | ✅ 可在 Mac 上编译出可安装的 `.app` |
+| [`keyman/`](keyman/) | Windows / macOS / Linux / web / 移动端 | [Keyman](https://keyman.com)(`.kmn`) | 源码就绪,用 Keyman Developer 编译 |
+
+两者共享同一套 **Velthuis → 巴利文** 方案(和网页版一致):长元音双写(`aa→ā`)、
+卷舌音加点(`.t→ṭ`)、`.m→ṃ`、`"n→ṅ`、`~n→ñ`、智能鼻音同化、词尾 `m→ṃ`。
+
+## 交互模型
+
+转写型输入法(比拼音简单):敲 ASCII,预编辑区实时显示巴利文,空格/标点上屏。
+因为转写是确定性的 1:1,**不需要候选消歧**;唯一的"选择"是目标文字。
+
+- **macOS**:实时下划线预编辑 + 输入法菜单切换 5 种文字(IAST/天城/僧伽罗/泰/缅)
+  + 智能纠正开关。引擎([Sources/PaliEngine.swift](macos/Sources/PaliEngine.swift))
+  是网页 `pali.js` 的忠实 Swift 移植,28 项测试逐字对齐。
+- **Keyman**:v1 实现 IAST(最通用);其余文字可作为额外键盘后续添加。
+
+## 为什么不是一套代码两端跑
+
+没有任何框架能同时在 Windows + macOS 做*真·系统输入法*——必须分别挂到各自 OS 的
+文字输入管线(macOS 的 IMK、Windows 的 TSF)。**Keyman 是最接近"一套搞定"的方案**
+(SIL 专为小众/少数民族语言而建),所以 Windows 侧用它覆盖;macOS 侧用原生 IMK
+拿到更顺滑的体验(实时预编辑、文字切换菜单)。
