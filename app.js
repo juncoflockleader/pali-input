@@ -67,7 +67,19 @@ const HINTS = {
   myanmar: '缅甸文——缅甸三藏传统（ṅ 连写的 kinzi 形为近似）。',
 };
 
+// --- Persisted preferences (script + smart correction) ---------------------
+const PREFS = {
+  get(k, d) { try { const v = localStorage.getItem('pali.' + k); return v === null ? d : v; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('pali.' + k, v); } catch {} },
+};
+
 let current = 'roman';
+{
+  const savedScript = PREFS.get('script', null);
+  if (savedScript && SCRIPTS[savedScript]) current = savedScript;
+  const savedSmart = PREFS.get('smart', null);
+  if (savedSmart !== null) smartNasal.checked = savedSmart === '1';
+}
 
 // --- Build script tabs ------------------------------------------------------
 for (const key of Object.keys(SCRIPTS)) {
@@ -83,6 +95,7 @@ for (const key of Object.keys(SCRIPTS)) {
 
 function selectScript(key) {
   current = key;
+  PREFS.set('script', key);
   for (const t of tabsEl.children) t.classList.toggle('active', t.dataset.script === key);
   output.setAttribute('lang', LANG[key]);
   scriptHint.textContent = HINTS[key];
@@ -329,7 +342,7 @@ function renderGlossary(text) {
 }
 
 input.addEventListener('input', render);
-smartNasal.addEventListener('change', render);
+smartNasal.addEventListener('change', () => { PREFS.set('smart', smartNasal.checked ? '1' : '0'); render(); });
 
 // Clickable prediction chips (event delegation — chips are rebuilt each render).
 nextSoundsEl.addEventListener('click', (e) => {

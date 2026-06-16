@@ -45,8 +45,9 @@ roughly prioritized. Checked = shipped.
 
 ## C. Web / UX polish
 
-- [ ] **PWA**: manifest + service worker → installable, truly offline.
-- [ ] **Persist settings** (script choice, smart correction) via localStorage.
+- [x] **PWA**: `manifest.webmanifest` + service worker (`sw.js`, network-first
+      with offline cache fallback) + icons → installable, works offline.
+- [x] **Persist settings** (script choice, smart correction) via localStorage.
 - [ ] Mobile-web layout tuning; accessibility (ARIA, keyboard nav).
 
 ## D. Engineering / distribution

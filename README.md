@@ -4,6 +4,7 @@
 Type the **pronunciation** of Pali in plain ASCII and get proper Pali script.
 
 **🌐 在线试用 · Live demo: https://juncoflockleader.github.io/pali-input/**
+（可「安装」为 PWA，离线可用；会记住所选文字与智能纠正设置）
 
 巴利语本身没有专属文字，历来用多种文字书写。本工具把易输入的拉丁拼写实时
 转写为：

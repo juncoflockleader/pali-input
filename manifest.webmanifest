@@ -1,0 +1,16 @@
+{
+  "name": "巴利语拼音输入法 · Pali Phonetic IME",
+  "short_name": "Pali IME",
+  "description": "Type romanized Pali (Velthuis ASCII) and get Pali script — IAST, Devanāgarī, Sinhala, Thai, Myanmar — with meanings and word completion.",
+  "lang": "zh",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f6f1e7",
+  "theme_color": "#b5651d",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
