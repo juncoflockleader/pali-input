@@ -9,7 +9,7 @@
 | 目录 | 平台 | 框架 | 状态 |
 |------|------|------|------|
 | [`macos/`](macos/) | macOS | InputMethodKit (Swift) | ✅ 可在 Mac 上编译出可安装的 `.app` |
-| [`keyman/`](keyman/) | Windows / macOS / Linux / web / 移动端 | [Keyman](https://keyman.com)(`.kmn`) | 源码就绪,用 Keyman Developer 编译 |
+| [`keyman/`](keyman/) | Windows / macOS / Linux / web / 移动端 | [Keyman](https://keyman.com)(`.kmn`) | 5 个键盘源码就绪(IAST + 4 原生文字,已模拟器校验),用 Keyman Developer 编译 |
 
 两者共享同一套 **Velthuis → 巴利文** 方案(和网页版一致):长元音双写(`aa→ā`)、
 卷舌音加点(`.t→ṭ`)、`.m→ṃ`、`"n→ṅ`、`~n→ñ`、智能鼻音同化、词尾 `m→ṃ`。
@@ -20,9 +20,10 @@
 因为转写是确定性的 1:1,**不需要候选消歧**;唯一的"选择"是目标文字。
 
 - **macOS**:实时下划线预编辑 + 输入法菜单切换 5 种文字(IAST/天城/僧伽罗/泰/缅)
-  + 智能纠正开关。引擎([Sources/PaliEngine.swift](macos/Sources/PaliEngine.swift))
-  是网页 `pali.js` 的忠实 Swift 移植,28 项测试逐字对齐。
-- **Keyman**:v1 实现 IAST(最通用);其余文字可作为额外键盘后续添加。
+  + 智能纠正开关 + 光标旁词义/词根浮窗。引擎是网页 `pali.js` 的忠实 Swift 移植。
+- **Keyman**:5 个键盘——IAST(手写)+ 天城/僧伽罗/泰/缅(由 `build-native.cjs`
+  从引擎字表**生成**,并用 Keyman 规则模拟器**逐字校验**:120/120 与网页引擎一致)。
+  每个键盘输出一种文字;换文字即换键盘。
 
 ## 为什么不是一套代码两端跑
 

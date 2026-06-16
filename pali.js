@@ -291,7 +291,10 @@
     return result;
   }
 
-  const Pali = { tokenize, transliterate, transliterateAll, SCRIPTS };
+  // Raw glyph tables, exposed for tooling (e.g. the Keyman keyboard generator).
+  const TABLES = { devanagari: DEVANAGARI, sinhala: SINHALA, thai: THAI, myanmar: MYANMAR };
+
+  const Pali = { tokenize, transliterate, transliterateAll, SCRIPTS, TABLES };
 
   // Dual export: CommonJS (Node) and global (browser classic <script>).
   if (typeof module !== 'undefined' && module.exports) module.exports = Pali;

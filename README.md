@@ -22,9 +22,10 @@ Type the **pronunciation** of Pali in plain ASCII and get proper Pali script.
 - **macOS**(原生 InputMethodKit / Swift):`cd desktop/macos && ./build.sh install`
   → 在「系统设置 → 键盘 → 输入法」启用「Pali」。引擎是 `pali.js` 的忠实 Swift 移植
   (28 项测试逐字对齐),菜单可切 5 种文字。
-- **Windows 等**([Keyman](https://keyman.com)):用 Keyman Developer 编译
-  [`desktop/keyman/pali.kmn`](desktop/keyman/pali.kmn),一套源码出
-  Windows/macOS/Linux/web/移动端安装包(v1 输出 IAST)。
+- **Windows 等**([Keyman](https://keyman.com)):5 个键盘源码(IAST + 天城/僧伽罗/
+  泰/缅 4 种原生文字,后者由生成器从引擎字表生成并经规则模拟器逐字校验),用
+  Keyman Developer 编译即得 Windows/macOS/Linux/web/移动端安装包。见
+  [`desktop/keyman/`](desktop/keyman/)。
 
 ## 使用 · Usage
 
