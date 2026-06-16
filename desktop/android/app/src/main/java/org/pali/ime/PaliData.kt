@@ -46,6 +46,11 @@ class PaliData private constructor(
         stemKey(k)?.let { k2 -> glossary[k2]?.let { return GlossResult(it.first, it.second, k2, true) } }
         if (dpd.has(k)) return GlossResult(dpd.optString(k), "", k, false)
         stemKey(k)?.let { k2 -> if (dpd.has(k2)) return GlossResult(dpd.optString(k2), "", k2, true) }
+        // inflection fallback: analyze and return the best full stem's gloss
+        val a = analyze(toAkk(k), 1).firstOrNull()
+        if (a != null && a.full && a.stem.en.isNotEmpty()) {
+            return GlossResult(a.stem.en, a.stem.zh, a.stem.label, true)
+        }
         return null
     }
     private fun stemKey(k: String): String? =

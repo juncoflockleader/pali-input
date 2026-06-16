@@ -87,6 +87,12 @@ struct EngineTests {
             hasA("anugacchati", { $0.prefixes.contains { $0.form == "anu" } && $0.stem.label == "√gam" }, "anugacchati")
             hasA("anattā", { $0.prefixes.contains { $0.form == "an" } && $0.stem.label == "attā" }, "anattā")
 
+            // inflection-aware lookup: declined/conjugated forms resolve to a gloss
+            for w in ["dhammassa", "gacchanti", "buddhena", "paññāya"] {
+                if let r = pd.lookup(w), !r.en.isEmpty { pass += 1 }
+                else { fail += 1; print("FAIL inflect lookup \(w)") }
+            }
+
             // word completion (frequency-ranked)
             let nibb = pd.completeWord("nibb", limit: 6).map { $0.w }
             if nibb.contains("nibbāna") { pass += 1 } else { fail += 1; print("FAIL completeWord nibb -> \(nibb)") }

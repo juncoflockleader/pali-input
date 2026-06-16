@@ -121,6 +121,11 @@ final class PaliData {
             let k2 = String(k.dropLast())
             if let m = dpd[k2] { return GlossResult(en: m, zh: "", key: k2, stem: true) }
         }
+        // 3) inflection fallback: morphologically analyze and return the best
+        //    fully-explained stem's gloss (so declined/conjugated forms resolve).
+        if let a = analyze(toAkk(k), limit: 1).first, a.full, !a.stem.en.isEmpty {
+            return GlossResult(en: a.stem.en, zh: a.stem.zh, key: a.stem.label, stem: true)
+        }
         return nil
     }
 

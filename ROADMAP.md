@@ -28,9 +28,13 @@ roughly prioritized. Checked = shipped.
       nibbāna), so a learner's key words always surface first.
 - [ ] **Compound / phrase (词组) suggestions** — known-compound completion;
       true samāsa splitting needs a corpus (harder).
-- [ ] **Inflection-aware lookup** — import DPD's inflected-form → headword map
-      so any declined/conjugated word resolves to a gloss (biggest UX win for
-      the dictionary).
+- [x] **Inflection-aware lookup** — gloss lookup now falls back to the
+      morphological splitter, so declined/conjugated forms resolve to their
+      lemma's meaning (dhammassa → dhamma, gacchanti → √gam, buddhena → buddha).
+      All platforms. *Algorithmic* (reuses our endings/roots + DPD stem match),
+      so no giant inflection table — covers regular inflection; irregular
+      stem-changing forms not in the dictionary may still miss. (DPD's full
+      inflected-form table is a 169 MB SQLite DB, too big to bundle.)
 
 ## B. Data quality
 

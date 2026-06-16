@@ -35,6 +35,12 @@ fun main() {
     hasA("anugacchati", { a -> a.prefixes.any { it.form == "anu" } && a.stem.label == "√gam" }, "anugacchati")
     hasA("anattā", { a -> a.prefixes.any { it.form == "an" } && a.stem.label == "attā" }, "anattā")
 
+    // inflection-aware lookup: declined/conjugated forms resolve to a gloss
+    for (w in listOf("dhammassa", "gacchanti", "buddhena", "paññāya")) {
+        val r = pd.lookup(w)
+        check(r != null && r.en.isNotEmpty(), "inflect lookup $w")
+    }
+
     // word completion
     check(pd.completeWord("nibb", 6).any { it.first == "nibbāna" }, "completeWord nibb -> nibbāna")
     check(pd.completeWord("dhamma", 6).none { it.first == "dhamma" }, "completeWord skips exact")

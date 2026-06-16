@@ -308,7 +308,12 @@ function renderGlossary(text) {
   for (const raw of words) {
     const iast = normWord(raw);
     if (!iast) continue;
-    const hit = Glossary.lookup(iast);
+    let hit = Glossary.lookup(iast);
+    // inflection fallback: morphologically resolve declined/conjugated forms
+    if (!hit) {
+      const a = Predict.analyze(Predict.toAkk(iast), 1)[0];
+      if (a && a.full && a.stem.en) hit = { en: a.stem.en, zh: a.stem.zh, key: a.stem.label, stem: true };
+    }
     const stem = hit && hit.stem ? ` <span class="stem">→ ${escapeHtml(hit.key)}</span>` : '';
     rows.push(
       `<div class="g-row${hit ? '' : ' unknown'}">` +

@@ -235,5 +235,22 @@ const FW = require('./freq-words.json');
   assert(P.completeWord('', FW, 6).length === 0, 'completeWord empty prefix -> none');
 }
 
+// --- Inflection-aware resolution (glossary -> morphological analysis) -------
+function resolve(w) {
+  let h = G.lookup(w);
+  if (!h) {
+    const a = P.analyze(P.toAkk(w), 1)[0];
+    if (a && a.full && a.stem.en) h = { en: a.stem.en, zh: a.stem.zh, key: a.stem.label, stem: true };
+  }
+  return h;
+}
+{
+  assert(resolve('dhammassa') && resolve('dhammassa').key === 'dhamma', 'inflect dhammassa -> dhamma');
+  assert(resolve('gacchanti') && resolve('gacchanti').key === '√gam', 'inflect gacchanti -> √gam');
+  assert(resolve('buddhena') && resolve('buddhena').key === 'buddha', 'inflect buddhena -> buddha');
+  assert(resolve('paññāya') && resolve('paññāya').key === 'paññā', 'inflect paññāya -> paññā');
+  assert(!resolve('xyzzy'), 'inflect unknown -> none');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
