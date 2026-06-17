@@ -1,242 +1,292 @@
-# 巴利语拼音输入法 · Pali Phonetic IME
+# Pali Phonetic IME · 巴利语拼音输入法
 
-输入发音（ASCII 罗马拼写），输出巴利文。
+> 🌐 **Languages**: **English** ｜ [中文](README_CN.md)
+
 Type the **pronunciation** of Pali in plain ASCII and get proper Pali script.
 
 [![CI](https://github.com/juncoflockleader/pali-input/actions/workflows/ci.yml/badge.svg)](https://github.com/juncoflockleader/pali-input/actions/workflows/ci.yml)
 
-**🌐 在线试用 · Live demo: https://juncoflockleader.github.io/pali-input/**
-（可「安装」为 PWA，离线可用；会记住所选文字与智能纠正设置）
+**🌐 Live demo: https://juncoflockleader.github.io/pali-input/**
+(installable as a PWA, works offline; remembers your script + smart-correction settings)
 
-巴利语本身没有专属文字，历来用多种文字书写。本工具把易输入的拉丁拼写实时
-转写为：
+Pali has no script of its own — it has always been written in many. This tool
+transliterates easy-to-type Latin spelling, live, into:
 
-| 输出 | 说明 |
-|------|------|
-| **IAST** | 带变音符号的罗马转写（`buddhaṃ saraṇaṃ gacchāmi`）——学术与词典通用 |
-| **देवनागरी** | 天城文——南亚学术、三藏校勘 |
-| **සිංහල** | 僧伽罗文——斯里兰卡上座部 |
-| **ไทย** | 泰文——泰国三藏传统 |
-| **မြန်မာ** | 缅甸文——缅甸三藏传统（含 ṅ 连写的 kinzi 形） |
+| Output | Notes |
+|--------|-------|
+| **IAST** | diacritic Roman (`buddhaṃ saraṇaṃ gacchāmi`) — the academic / dictionary standard |
+| **देवनागरी** | Devanāgarī — South Asian scholarship, Tipiṭaka editions |
+| **සිංහල** | Sinhala — Sri Lankan Theravāda |
+| **ไทย** | Thai — Thai Tipiṭaka tradition |
+| **မြန်မာ** | Myanmar — Burmese Tipiṭaka tradition (incl. the *kinzi* form of conjunct ṅ) |
 
-## 桌面输入法 · Desktop IME
+## Desktop & mobile IMEs
 
-除了网页版,还能做成**系统级输入法**(在任何 app 里直接出巴利文),见
-[`desktop/`](desktop/):
+Beyond the web page, the same engine ships as **system-wide input methods** (type
+Pali directly in any app) — see [`desktop/`](desktop/):
 
-- **macOS**(原生 InputMethodKit / Swift):`cd desktop/macos && ./build.sh install`
-  → 在「系统设置 → 键盘 → 输入法」启用「Pali」。引擎是 `pali.js` 的忠实 Swift 移植
-  (28 项测试逐字对齐),菜单可切 5 种文字,光标旁有词义/词根浮窗 + 完整 DPD 词典。
-- **iOS / iPadOS**(原生键盘扩展 / Swift):复用同一引擎,用 Xcode 建工程打包;见
-  [`desktop/ios/`](desktop/ios/)。
-- **Android**(原生 InputMethodService / Kotlin):引擎移植到 Kotlin(28 项 JVM 测试通过),
-  Android Studio 打开 [`desktop/android/`](desktop/android/) 构建。
-- **Windows 等**([Keyman](https://keyman.com)):5 个键盘源码(IAST + 天城/僧伽罗/
-  泰/缅 4 种原生文字,后者由生成器从引擎字表生成并经规则模拟器逐字校验),用
-  Keyman Developer 编译即得 Windows/macOS/Linux/web/移动端安装包。见
-  [`desktop/keyman/`](desktop/keyman/)。
+- **macOS** (native InputMethodKit / Swift): `cd desktop/macos && ./build.sh install`
+  → enable “Pali” under System Settings → Keyboard → Input Sources. The engine is a
+  faithful Swift port of `pali.js` (verified char-for-char against the JS tests); the
+  menu switches all 5 scripts, a floating panel shows meaning + morphology + the full
+  DPD dictionary, and it has a **Chinese-IME-style candidate window** (number to
+  select, `-`/`=` to page) with **next-word prediction**.
+- **iOS / iPadOS** (native keyboard extension / Swift): reuses the same engine; build
+  with Xcode — see [`desktop/ios/`](desktop/ios/).
+- **Android** (native InputMethodService / Kotlin): the engine ported to Kotlin (JVM
+  tests pass); open [`desktop/android/`](desktop/android/) in Android Studio.
+- **Windows etc.** ([Keyman](https://keyman.com)): 5 keyboard sources (IAST + native
+  Devanāgarī / Sinhala / Thai / Myanmar — the latter generated from the engine's tables
+  and verified char-for-char by a rule simulator). Compile with Keyman Developer to get
+  Windows/macOS/Linux/web/mobile packages — see [`desktop/keyman/`](desktop/keyman/).
 
-## 使用 · Usage
+## Download
 
-不需要任何构建步骤。
+The latest [release](https://github.com/juncoflockleader/pali-input/releases/latest)
+ships ready-to-install packages:
 
-- **直接打开**：双击 `index.html` 即可在浏览器中使用（离线可用）。
-- **或起一个本地服务器**（任选其一）：
+- **macOS** — `PaliIME-macOS-v1.1.0.zip` (ad-hoc signed). Unzip to get `PaliIME.app`,
+  put it in `~/Library/Input Methods/`, then add “Pali” under System Settings → Keyboard
+  → Input Sources. On first launch, if Gatekeeper blocks it, click **Open Anyway** in
+  System Settings → Privacy & Security.
+- **Android** — `PaliIME-v1.1.0.apk` (debug-signed, sideloadable). Allow “install
+  unknown apps”, install it, then enable the Pali keyboard under Settings → System →
+  Languages & input.
+- **Web / PWA** — nothing to download: use the [live version](https://juncoflockleader.github.io/pali-input/)
+  and “Add to Home Screen / Install as app” for offline use.
+- **iOS** — Apple does not allow self-hosted installs; use the web PWA or a Keyman
+  keyboard instead.
+
+Packages are built and uploaded automatically by
+[`.github/workflows/release.yml`](.github/workflows/release.yml) when a `v*` tag is pushed.
+
+## Usage (web)
+
+No build step required.
+
+- **Just open it**: double-click `index.html` in a browser (works offline).
+- **Or serve locally**:
   ```bash
   python3 -m http.server 8000
-  # 然后访问 http://localhost:8000
+  # then open http://localhost:8000
   ```
 
-## 输入方案 · Input scheme
+## Input scheme
 
-整体沿用通行的 **Velthuis** ASCII 约定，并接受直接粘贴带变音符号的 IAST。
+Follows the common **Velthuis** ASCII convention, and also accepts diacritic IAST
+pasted directly.
 
-| 类别 | 输入 | 输出 |
-|------|------|------|
-| 长元音 Long vowels | `aa` `ii` `uu` | ā ī ū |
-| 卷舌音 Retroflex | `.t` `.th` `.d` `.dh` `.n` `.l` | ṭ ṭh ḍ ḍh ṇ ḷ |
-| 鼻音 ṅ (velar) | `"n`（或 `;n`） | ṅ |
-| 鼻音 ñ (palatal) | `~n` | ñ |
-| 随韵 Niggahīta ṃ | `.m` | ṃ |
-| 送气 Aspirates | `kh gh ch jh th dh ph bh` | 同形 |
+| Category | Type | Get |
+|----------|------|-----|
+| Long vowels | `aa` `ii` `uu` | ā ī ū |
+| Retroflex | `.t` `.th` `.d` `.dh` `.n` `.l` | ṭ ṭh ḍ ḍh ṇ ḷ |
+| Nasal ṅ (velar) | `"n` (or `;n`) | ṅ |
+| Nasal ñ (palatal) | `~n` | ñ |
+| Niggahīta ṃ | `.m` | ṃ |
+| Aspirates | `kh gh ch jh th dh ph bh` | unchanged |
 
-其余字母（`k g c j t d p b n m y r l v s h` 与 `a i u e o`）按读音直接输入。
+All other letters (`k g c j t d p b n m y r l v s h` and `a i u e o`) are typed as they sound.
 
-## 构词提示 · Roots & next sounds
+## Prediction & word formation
 
-针对你**正在输入的那个词**，实时给出三类提示（见 [predict.js](predict.js)）：
+For **the word you're currently typing**, the panel offers several live aids
+(see [predict.js](predict.js)):
 
-1. **下一个音 Next sound**——基于真实巴利词/词根的**音级前缀预测**：把词库
-   (词根各形 + 常用词)拆成 *akkhara*(巴利字音)序列,按你已输入的音做前缀
-   匹配,统计并排序出最可能的下一个音。每个候选显示该音及其键入法,**点一下
-   即追加**。库里无匹配时回退到**音系规则**(辅音后可接元音或合法的连写音等)。
-2. **可能的词根 √dhātu**——匹配的[巴利词根](roots.js)(约 60 个),含英/中释义;
-   也能通过现在式词干匹配(如输入 `pass` → √dis「见」),并**自动剥离前缀**
-   (如 `anubudh` → upasagga `anu-` + √budh)。点一下填入该词。
-3. **可能的前缀 upasagga**——20 个传统动词前缀,正在键入或已键入的都会列出。
-4. **拆分 Analysis**——对正在输入的**整词**做形态拆解:
-   `前缀 + 词根/词 + 词尾`,各部分配色并带释义。例如:
-   - `dhammassa` → **dhamma**(法）+ **-assa**（属格·…的）
-   - `anugacchati` → **anu-** + **√gam**（去）+ **-ti**（动词·他…）
-   - `anattā` → **an-**（否定）+ **attā**（我）
-   词尾用完整的 **vibhatti**(格/时态词尾)+ 常见 **kita/taddhita** 后缀表
-   匹配(见 [roots.js](roots.js) 的 `ENDINGS`),词干再去 **685 个词根** + 词库里找。
+1. **Next sound** — *akkhara*-level prefix prediction from real Pali words/roots: the
+   lexicon (root forms + common words) is broken into *akkhara* (Pali letter) sequences,
+   prefix-matched against what you've typed, and ranked by frequency. Each candidate
+   shows the sound and how to type it; **click to append**. With no lexicon match it
+   falls back to **phonotactic** rules (which sounds may legally follow).
+2. **Completion** — whole-word completion ranked by Tipiṭaka frequency; and **Next word**
+   — predicts the following word from a bigram model over the Pali canon (click to append,
+   chains into the next prediction).
+3. **Roots √dhātu** — matching [Pali roots](roots.js) with EN/中文 glosses; also matched
+   via present-tense stems (e.g. `pass` → √dis “see”), and **prefixes are stripped
+   automatically** (`anubudh` → upasagga `anu-` + √budh). Click to fill the word.
+4. **Prefixes upasagga** — the 20 traditional verbal prefixes, listed as you type.
+5. **Analysis** — morphological split of the **whole word**: `prefix + root/word + ending`,
+   color-coded and glossed. For example:
+   - `dhammassa` → **dhamma** (Dhamma) + **-assa** (genitive · “of …”)
+   - `anugacchati` → **anu-** + **√gam** (go) + **-ti** (verb · 3rd person)
+   - `anattā` → **an-** (negation) + **attā** (self)
+   Endings are matched with the full **vibhatti** (case/tense endings) + common
+   **kita/taddhita** suffix tables (see `ENDINGS` in [roots.js](roots.js)); the stem is
+   then looked up among the **685 roots** + the glossary.
 
-音级匹配对鼻音做了**宽松处理**:你打的 `n` 可匹配 ṅ/ñ/ṇ(后接塞音会同化),
-词尾 `m` 可匹配随韵 ṃ,所以半成词也能正确预测(如 `san` 会预测向 saṅkhāra)。
+Akkhara matching is **lenient about nasals**: a typed `n` matches ṅ/ñ/ṇ (assimilation
+before a stop), and word-final `m` matches niggahīta ṃ, so half-typed words still predict
+well (`san` predicts toward saṅkhāra).
 
-> **关于"100% 覆盖"**:前缀(upasagga 20 个)是封闭集,已 100%;词根已从
-> [DPD 数据集](https://github.com/digitalpalidictionary/dpd-db)导入 **685 个**
-> (英文释义来自 DPD,权威;其中 85 个有中文 + 现在式词干)——已覆盖 DPD 的全部
-> 巴利词根。更重要的是,**词根+词缀 ≠ 翻译**:词义是词典化、常不可组合的,且大量词
-> (虚词/代词/数词/专名/复合词)不由词根构成。所以本面板是**形态分析/教学**,真正的
-> "翻译"覆盖取决于词库([glossary.js](glossary.js))的规模。
+> **On “100% coverage”**: the prefixes (20 upasagga) are a closed set — 100% covered;
+> the roots are imported from the [DPD dataset](https://github.com/digitalpalidictionary/dpd-db)
+> — **685** of them (English glosses from DPD, authoritative; 85 with Chinese + present
+> stem) — covering all DPD Pali roots. More importantly, **root + affix ≠ translation**:
+> meaning is lexicalized and often non-compositional, and many words (particles,
+> pronouns, numerals, proper names, compounds) aren't built from roots. So this panel is
+> **morphological analysis / teaching**; real “translation” coverage depends on the size
+> of the glossary ([glossary.js](glossary.js)).
 
-## 释义 · Meanings（英文 / 中文）
+## Meanings (English / Chinese)
 
-输出下方会**逐词显示英文与中文释义**：
+Below the output, each word's **English and Chinese gloss** is shown:
 
-- 收录约 200 条常用巴利词（核心教理术语、念诵常用词、虚词），见
-  [glossary.js](glossary.js)。
-- 自动归并常见的宾格/随韵词尾，如 `buddhaṃ → buddha`、`saraṇaṃ → saraṇa`。
-- 对若干著名经偈给出**整句翻译**，例如：
+- ~200 curated common Pali words (core doctrinal terms, chanting vocabulary, particles)
+  — see [glossary.js](glossary.js); words not curated fall back to the full DPD
+  dictionary (~75.6k entries, English only).
+- Common accusative / niggahīta endings are folded automatically
+  (`buddhaṃ → buddha`, `saraṇaṃ → saraṇa`); inflected forms resolve to their stem's gloss
+  via morphological analysis.
+- **Compound (samāsa) splitting**: `satipaṭṭhāna → sati + upaṭṭhāna`.
+- A few well-known verses get a **whole-phrase translation**, e.g.:
   - `buddhaṃ saraṇaṃ gacchāmi` → “I go to the Buddha for refuge. 我皈依佛。”
   - `sabbe sattā sukhī hontu` → “May all beings be happy. 愿一切众生快乐。”
 
-释义仅为常用词教学辅助，非完整词典，未收录的词显示为“—”。
+Glosses are a study aid for common words, not a complete dictionary; unlisted words show “—”.
 
-### 智能纠正 Smart correction（默认开启）
+### Smart correction (on by default)
 
-按巴利正字法自动纠正鼻音，让你可以直接按读音敲键盘；界面会**显示纠正内容**
-（如 `buddham → buddhaṃ`）。
+Auto-corrects nasals per Pali orthography so you can just type by sound; the UI **shows
+what changed** (e.g. `buddham → buddhaṃ`).
 
-**1. 鼻音同化**——`n` 随后面的塞音同部位同化：
+**1. Nasal assimilation** — `n` assimilates to the place of the following stop:
 
-| 你输入 | 自动得到 | |
-|--------|----------|---|
-| `sangha` | saṅgha | n + 软腭音 → ṅ |
-| `panca` | pañca | n + 硬腭音 → ñ |
-| `dan.da` | daṇḍa | n + 卷舌音 → ṇ |
-| `sambodhi` | sambodhi | n + 唇音 → m |
+| You type | You get | |
+|----------|---------|---|
+| `sangha` | saṅgha | n + velar → ṅ |
+| `panca` | pañca | n + palatal → ñ |
+| `dan.da` | daṇḍa | n + retroflex → ṇ |
+| `sambodhi` | sambodhi | n + labial → m |
 
-`n` 后接齿音时不变（`danta` → danta、`ananda` → ananda）。
+`n` before a dental stays put (`danta` → danta, `ananda` → ananda).
 
-**2. 词尾随韵**——巴利词尾的 `m` 必为随韵 ṃ，故自动补点：
+**2. Word-final niggahīta** — a Pali word-final `m` is always ṃ, so the dot is added:
 
-| 你输入 | 自动得到 |
-|--------|----------|
+| You type | You get |
+|----------|---------|
 | `buddham` | buddhaṃ |
 | `evam` | evaṃ |
 | `dhammam` | dhammaṃ |
 
-仅纠正**词尾**的 m；词中的 m 不动，以免误改叠辅音（`kamma` 保持 kamma）
-或 m+元音（`metta` 保持 metta）。
+Only **word-final** m is corrected; medial m is left alone, so geminates (`kamma` stays
+kamma) and m+vowel (`metta` stays metta) aren't touched.
 
-若要保留随韵写法（如 `saṃgha`），请用 `.m`：`sa.mgha` → saṃgha。
-可在界面上关闭“智能纠正”以禁用上述全部行为。
+To keep the niggahīta spelling (e.g. `saṃgha`), type `.m`: `sa.mgha` → saṃgha.
+Turn off “Smart correction” in the UI to disable all of the above.
 
-## 示例 · Examples
+## Examples
 
-| 输入 | IAST |
-|------|------|
+| Input | IAST |
+|-------|------|
 | `buddha.m sara.na.m gacchaami` | buddhaṃ saraṇaṃ gacchāmi |
 | `namo tassa bhagavato` | namo tassa bhagavato |
 | `sabbe sattaa sukhii hontu` | sabbe sattā sukhī hontu |
 | `aniccaa vata sa"nkhaaraa` | aniccā vata saṅkhārā |
 
-## 结构 · Architecture
+## Architecture
 
 ```
 pali-ime/
-├── index.html   界面结构
-├── styles.css   样式
-├── app.js       界面逻辑（实时转写、标签页、复制、构词提示、逐词释义）
-├── pali.js      转写引擎（无依赖，浏览器 + Node 双用）
-├── glossary.js  巴利词 → 英文 / 中文 词库（约 200 条 + 经偈整句）
-├── roots.data.js  生成：685 个词根（DPD 导入 + 中文），勿手改
-├── roots.js     前缀 upasagga（20）+ 词尾 vibhatti/后缀（42）+ 加载 roots.data.js
-├── predict.js   下一音预测 + 词根/前缀匹配 + 词形拆解 + 补全 + 下一词（akkhara 级引擎）
-├── bigram.json  生成：下一词预测模型（巴利圣典语料 bigram，6.7 万词头）
-├── tools/       DPD 导入管线（build-roots.mjs + 缓存）+ build-bigram.cjs（语料 bigram）
-├── test.js      验证（118 项：转写 + 词库 + 预测 + 拆解 + 补全 + 下一词）
-└── README.md
+├── index.html   UI structure
+├── styles.css   styles
+├── app.js       UI logic (live transliteration, tabs, copy, prediction, per-word glosses)
+├── pali.js      transliteration engine (no deps; browser + Node)
+├── glossary.js  Pali → English / Chinese lexicon (~200 entries + verse phrases)
+├── roots.data.js  generated: 685 roots (DPD import + Chinese), do not hand-edit
+├── roots.js     prefixes upasagga (20) + endings vibhatti/suffixes (42) + loads roots.data.js
+├── predict.js   next-sound + root/prefix match + morphology + completion + next-word
+├── bigram.json  generated: next-word model (Pali-canon bigram, 67k head words)
+├── tools/       DPD import pipeline (build-roots.mjs + cache) + build-bigram.cjs
+├── test.js      tests (118: transliteration + lexicon + prediction + analysis + completion + next-word)
+└── desktop/     native IMEs (macOS / iOS / Android / Keyman)
 ```
 
-转写引擎是纯函数管线：
+The transliteration engine is a pure-function pipeline:
 
 ```
-tokenize(text) → [音素 tokens] → render<Script>(tokens)
+tokenize(text) → [phoneme tokens] → render<Script>(tokens)
 ```
 
-每个音素 token 以规范的 IAST 字母为内部表示，并标注类型
-（元音 / 辅音 / 随韵 / 透传）。各文字的渲染器共用一个通用的
-**元音附标文字（abugida）** 算法：辅音自带固有元音 `a`，其他元音用附标替换，
-辅音连写用 virama 叠写，词首元音用独立形。泰文额外处理前置元音 `เ/โ` 的重排。
+Each token is stored internally as a canonical IAST letter, tagged by type (vowel /
+consonant / niggahīta / passthrough). Every script renderer shares one generic
+**abugida** algorithm: consonants carry the inherent vowel `a`, other vowels replace it
+with a sign, conjuncts stack with virama, word-initial vowels use independent forms. Thai
+additionally reorders the leading vowels `เ/โ`.
 
-## 词根数据管线 · Root data pipeline
+## Data pipeline
 
-词根来自 **[Digital Pāḷi Dictionary (dpd-db)](https://github.com/digitalpalidictionary/dpd-db)**
-（授权 CC BY-NC-SA）。`roots.data.js` 由脚本生成,**请勿手改**;重建步骤:
+**Roots** come from **[Digital Pāḷi Dictionary (dpd-db)](https://github.com/digitalpalidictionary/dpd-db)**
+(licensed CC BY-NC-SA). `roots.data.js` is generated — **do not hand-edit**; rebuild with:
 
 ```bash
-# 1) 拉取 DPD 词根表（TSV）
+# 1) fetch the DPD roots table (TSV)
 curl -sS -o tools/dpd_cache/dpd_roots.tsv \
   https://raw.githubusercontent.com/digitalpalidictionary/dpd-db/main/db/backup_tsv/dpd_roots_part_001.tsv
 
-# 2) 合并 DPD 英文释义 + 我们的中文/词干，生成 roots.data.js
-node tools/build-roots.mjs        # => 685 roots (85 中文, 600 English-only)
+# 2) merge DPD English glosses + our Chinese/stems → roots.data.js
+node tools/build-roots.mjs        # => 685 roots (85 Chinese, 600 English-only)
 ```
 
-- 英文释义(`root_meaning`)取自 DPD,权威。
-- 中文与动词现在式词干来自 [tools/curated-roots.mjs](tools/curated-roots.mjs)(我们维护),
-  在合并时叠加到对应词根上。
-- 同名异组的词根会按裸词根去重、合并义项。
+- English glosses (`root_meaning`) are taken from DPD, authoritative.
+- Chinese + present-tense stems come from [tools/curated-roots.mjs](tools/curated-roots.mjs)
+  (maintained by us), layered onto the matching root at merge time.
+- Homographic roots from different groups are deduped by bare root and their senses merged.
 
-**下一词预测(bigram)** — [bigram.json](bigram.json) 由巴利圣典语料统计而来,
-重建步骤(语料 [SuttaCentral bilara-data](https://github.com/suttacentral/bilara-data),授权 CC0):
+**Next-word prediction (bigram)** — [bigram.json](bigram.json) is built from the Pali
+canon. Rebuild it (corpus: [SuttaCentral bilara-data](https://github.com/suttacentral/bilara-data),
+licensed CC0):
 
 ```bash
 git clone --filter=blob:none --no-checkout --depth 1 -b published \
   https://github.com/suttacentral/bilara-data /tmp/bilara
 (cd /tmp/bilara && git sparse-checkout set root/pli/ms && git checkout)
-node tools/build-bigram.cjs /tmp/bilara/root/pli/ms   # => bigram.json（286 万词、6.7 万词头）
+node tools/build-bigram.cjs /tmp/bilara/root/pli/ms   # => bigram.json (2.86M tokens, 67k heads)
 ```
 
-> **未做的扩词库**:DPD 另有约 8 万词条(headwords),但体量太大、且仅英文,
-> 不适合塞进纯前端页面。翻译词库仍由 [glossary.js](glossary.js) 人工维护双语,可逐步扩充。
+> **Not done — a larger gloss dictionary**: DPD has ~80k headwords, but they're too large
+> and English-only for a pure front-end page. The bilingual translation lexicon stays
+> hand-maintained in [glossary.js](glossary.js) and can grow over time.
 
-## 测试 · Tests
+## Tests
 
 ```bash
-node test.js   # 95 passed, 0 failed
+node test.js   # 118 passed, 0 failed
 ```
 
-测试覆盖五种文字的已知正确写法（如 buddha→बुद्ध / බුද්ධ / พุทฺธ / ဗုဒ္ဓ）。
+Tests cover the known-correct spelling in all 5 scripts (e.g. buddha → बुद्ध / බුද්ධ /
+พุทฺธ / ဗုဒ္ဓ), plus the lexicon, morphological analysis, completion, and next-word
+prediction. The native engines (Swift / Kotlin) are tested separately by CI.
 
-## 已知限制 · Known limitations
+## Known limitations
 
-- **缅甸文**:ṅ 作为连写首音的 *kinzi*(င်္,如 saṅgha→သင်္ဃ)已正确处理。
-- 引擎面向标准巴利音系；不处理梵语特有音（ṛ ṝ ḹ ś ṣ ḥ 等）。
+- **Myanmar**: ṅ as a conjunct-initial *kinzi* (င်္, e.g. saṅgha → သင်္ဃ) is handled correctly.
+- The engine targets standard Pali phonology; it doesn't handle Sanskrit-only sounds
+  (ṛ ṝ ḹ ś ṣ ḥ, etc.).
 
-## 分发 · Distribution
+## Distribution
 
-各端怎么送到用户手里(仅讲方式):
+How each target reaches users (mechanism only):
 
-| 端 | 怎么分发 | 是否需开发者账号 |
-|------|----------|------------------|
-| **网页 / PWA** | 已托管在 GitHub Pages,有链接即用;可「安装」到手机主屏 / 电脑程序坞,离线可用 | 不需要 |
-| **macOS** | 本地 `./build.sh` 出 `.app`。**自用**:ad-hoc 签名,首次在「系统设置 → 隐私与安全性」点「仍要打开」即可。**公开分发零警告**:用 Developer ID 签名 + 公证(notarize),用户双击即开 | 自用不需要;签名 + 公证需 Apple 开发者账号 |
-| **iOS / iPadOS** | Xcode 建工程,真机 / 模拟器运行;对外走 App Store 或 TestFlight | 需 Apple 开发者账号 |
-| **Android** | Android Studio 构建出 APK,可直接发给人 sideload;或上架 Google Play | sideload 不需要;上架 Play 需开发者账号 |
-| **Keyman**(Win/Linux/web/移动) | Keyman Developer 编译 `.kmn` → 安装包;用户装免费的 Keyman app 后加载键盘 | 不需要 Apple / Google 账号 |
+| Target | How | Developer account? |
+|--------|-----|--------------------|
+| **Web / PWA** | hosted on GitHub Pages, share a link; installable to home screen / dock, offline | No |
+| **macOS** | release ships the `.app` (ad-hoc signed). **Personal use**: click “Open Anyway” in System Settings → Privacy & Security on first launch. **Zero-warning public**: Developer ID signing + notarization | Personal: no; signing + notarization needs an Apple account |
+| **iOS / iPadOS** | build with Xcode, run on device/simulator; for others use App Store or TestFlight | Apple account required |
+| **Android** | release ships the `.apk` for sideload; or publish to Google Play | sideload: no; Play: yes |
+| **Keyman** (Win/Linux/web/mobile) | compile `.kmn` with Keyman Developer → packages; users load it in the free Keyman app | No Apple/Google account |
 
-**建议**:面向最广用户、零门槛——主推**网页 PWA**(手机加到主屏、电脑装为应用,均离线可用),它已覆盖绝大多数场景。iOS 想免账号可用 PWA 或 Keyman 内的键盘替代;Android 可直接发 APK;macOS 自用免签名,需要公开零警告分发时再上 Developer ID 公证。
+**Recommendation**: for the widest, zero-friction reach, lead with the **web PWA** (add to
+home screen on phones, install as an app on desktop, offline either way) — it covers most
+cases. iOS without an account: use the PWA or a Keyman keyboard. Android: ship the APK
+directly. macOS: unsigned is fine for personal use; add Developer ID notarization only
+when you need zero-warning public distribution.
 
-## 路线图与许可 · Roadmap & License
+## Roadmap & License
 
-- 后续改进计划见 [ROADMAP.md](ROADMAP.md)。
-- **代码**采用 **MIT**（[LICENSE](LICENSE)）。
-- **打包的 DPD 数据**（`roots.data.js`、`dpd-dict.json`）来自
-  [Digital Pāḷi Dictionary](https://github.com/digitalpalidictionary/dpd-db)，
-  采用 **CC BY-NC-SA**（非商业 + 相同方式共享）——详见 [NOTICE.md](NOTICE.md)。
-  含该数据的发行版为非商业用途；纯 MIT / 可商用构建需移除 DPD 数据（仅保留人工词库）。
+- Planned improvements are in [ROADMAP.md](ROADMAP.md).
+- **Code** is **MIT** ([LICENSE](LICENSE)).
+- **Bundled DPD data** (`roots.data.js`, `dpd-dict.json`) is from the
+  [Digital Pāḷi Dictionary](https://github.com/digitalpalidictionary/dpd-db) under
+  **CC BY-NC-SA** (non-commercial + share-alike) — see [NOTICE.md](NOTICE.md). A
+  distribution that includes this data is non-commercial; a pure-MIT / commercial build
+  must remove the DPD data (keeping only the hand-curated lexicon).
+- The **next-word corpus** ([bilara-data](https://github.com/suttacentral/bilara-data)) is **CC0**.
