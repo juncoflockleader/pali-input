@@ -155,9 +155,10 @@ pali-ime/
 ├── glossary.js  巴利词 → 英文 / 中文 词库（约 200 条 + 经偈整句）
 ├── roots.data.js  生成：685 个词根（DPD 导入 + 中文），勿手改
 ├── roots.js     前缀 upasagga（20）+ 词尾 vibhatti/后缀（42）+ 加载 roots.data.js
-├── predict.js   下一音预测 + 词根/前缀匹配 + 词形拆解器（akkhara 级引擎）
-├── tools/       DPD 导入管线（build-roots.mjs + curated-roots.mjs + 缓存）
-├── test.js      验证（95 项：转写 + 词库 + 预测 + 拆解）
+├── predict.js   下一音预测 + 词根/前缀匹配 + 词形拆解 + 补全 + 下一词（akkhara 级引擎）
+├── bigram.json  生成：下一词预测模型（巴利圣典语料 bigram，6.7 万词头）
+├── tools/       DPD 导入管线（build-roots.mjs + 缓存）+ build-bigram.cjs（语料 bigram）
+├── test.js      验证（118 项：转写 + 词库 + 预测 + 拆解 + 补全 + 下一词）
 └── README.md
 ```
 
@@ -190,6 +191,16 @@ node tools/build-roots.mjs        # => 685 roots (85 中文, 600 English-only)
 - 中文与动词现在式词干来自 [tools/curated-roots.mjs](tools/curated-roots.mjs)(我们维护),
   在合并时叠加到对应词根上。
 - 同名异组的词根会按裸词根去重、合并义项。
+
+**下一词预测(bigram)** — [bigram.json](bigram.json) 由巴利圣典语料统计而来,
+重建步骤(语料 [SuttaCentral bilara-data](https://github.com/suttacentral/bilara-data),授权 CC0):
+
+```bash
+git clone --filter=blob:none --no-checkout --depth 1 -b published \
+  https://github.com/suttacentral/bilara-data /tmp/bilara
+(cd /tmp/bilara && git sparse-checkout set root/pli/ms && git checkout)
+node tools/build-bigram.cjs /tmp/bilara/root/pli/ms   # => bigram.json（286 万词、6.7 万词头）
+```
 
 > **未做的扩词库**:DPD 另有约 8 万词条(headwords),但体量太大、且仅英文,
 > 不适合塞进纯前端页面。翻译词库仍由 [glossary.js](glossary.js) 人工维护双语,可逐步扩充。

@@ -4,7 +4,7 @@
 // cache when offline. This avoids stale-cache surprises on a site that updates.
 // Bump CACHE on release to drop old entries.
 
-const CACHE = 'pali-ime-v1';
+const CACHE = 'pali-ime-v2';
 const SHELL = [
   './',
   'index.html',

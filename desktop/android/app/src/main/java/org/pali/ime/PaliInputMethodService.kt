@@ -21,6 +21,7 @@ class PaliInputMethodService : InputMethodService() {
     private var buffer = StringBuilder()
     private var script = PaliScript.ROMAN
     private var smartNasal = true
+    private var lastWord = ""            // IAST of the last committed word (for next-word)
     private var data: PaliData? = null
 
     private lateinit var suggestion: TextView
@@ -99,12 +100,20 @@ class PaliInputMethodService : InputMethodService() {
     private fun onChar(c: Char) { buffer.append(c); refresh() }
 
     private fun onSpace() {
-        if (buffer.isNotEmpty()) commitWord()
-        currentInputConnection?.commitText(" ", 1)
+        val ic = currentInputConnection
+        if (buffer.isNotEmpty()) {
+            val iast = PaliEngine.transliterate(buffer.toString(), PaliScript.ROMAN, smartNasal)
+            commitWord()
+            ic?.commitText(" ", 1)
+            showNextWord(iast)          // predict what comes next
+        } else {
+            ic?.commitText(" ", 1)
+            dismissNextWord()
+        }
     }
     private fun onReturn() {
         if (buffer.isNotEmpty()) commitWord()
-        else currentInputConnection?.commitText("\n", 1)
+        else { currentInputConnection?.commitText("\n", 1); dismissNextWord() }
     }
     private fun onDelete() {
         val ic = currentInputConnection ?: return
@@ -114,6 +123,7 @@ class PaliInputMethodService : InputMethodService() {
             refresh()
         } else {
             ic.deleteSurroundingText(1, 0)
+            dismissNextWord()
         }
     }
 
@@ -160,11 +170,16 @@ class PaliInputMethodService : InputMethodService() {
             completionRow.addView(b)
         }
     }
-    // The engine accepts IAST input directly, so set the buffer to the lemma.
+    // Pick a completion: commit the whole word + a space, then predict the next.
     private fun acceptCompletion(lemma: String) {
+        val ic = currentInputConnection ?: return
+        buffer.setLength(0); buffer.append(lemma)
+        ic.setComposingText(converted, 1)
+        ic.finishComposingText()
+        ic.commitText(" ", 1)
+        val iast = PaliEngine.transliterate(lemma, PaliScript.ROMAN, smartNasal)
         buffer.setLength(0)
-        buffer.append(lemma)
-        refresh()
+        showNextWord(iast)
     }
 
     private fun commitWord() {
@@ -172,6 +187,40 @@ class PaliInputMethodService : InputMethodService() {
         buffer.setLength(0)
         suggestion.text = scriptLabel()
         completionRow.removeAllViews()
+    }
+
+    // --- next-word prediction (bigram from the Pali canon) ---
+    // After a word is committed/picked, fill the strip with likely successors
+    // and keep the entered word + its gloss in the suggestion bar.
+    private fun showNextWord(word: String) {
+        lastWord = word
+        completionRow.removeAllViews()
+        val d = data ?: run { suggestion.text = scriptLabel(); return }
+        val preds = d.nextWord(word)
+        for (p in preds) {
+            val b = Button(this)
+            b.text = PaliEngine.transliterate(p.first, script, false)
+            b.isAllCaps = false
+            b.setOnClickListener { acceptNextWord(p.first) }
+            completionRow.addView(b)
+        }
+        val out = PaliEngine.transliterate(word, script, false)
+        val g = d.lookup(word)
+        suggestion.text = when {
+            g != null -> { val zh = if (g.zh.isEmpty()) "" else " · ${g.zh}"; "$out   ${g.en}$zh" }
+            preds.isEmpty() -> scriptLabel()
+            else -> out
+        }
+    }
+    private fun acceptNextWord(word: String) {
+        val out = PaliEngine.transliterate(word, script, false)
+        currentInputConnection?.commitText("$out ", 1)
+        showNextWord(word)
+    }
+    private fun dismissNextWord() {
+        lastWord = ""
+        completionRow.removeAllViews()
+        suggestion.text = scriptLabel()
     }
 
     private fun cycleScript(b: Button) {

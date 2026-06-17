@@ -289,6 +289,17 @@
       }
       return out;
     },
+    // Next-word prediction: likely successors of `word` from a bigram model
+    // ({ word: [next, ...] }, corpus-frequency order). Tries the word and a
+    // trailing-ṃ/m strip. Pure — no engine init.
+    nextWord(word, bigram, limit) {
+      limit = limit || 5;
+      if (!bigram) return [];
+      const w = (word || '').toLowerCase();
+      let succ = bigram[w];
+      if (!succ && /[ṃm]$/.test(w)) succ = bigram[w.slice(0, -1)];
+      return succ ? succ.slice(0, limit) : [];
+    },
   };
 
   if (typeof module !== 'undefined' && module.exports) {

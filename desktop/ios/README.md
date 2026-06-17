@@ -36,8 +36,8 @@ an Xcode project:
 3. In the extension target, replace its `KeyboardViewController.swift` with this
    one, and **add to the target**:
    - `../macos/Sources/PaliEngine.swift`, `../macos/Sources/PaliData.swift`
-   - `../macos/Resources/pali-data.json`, `dpd-dict.json`, `freq-words.json`
-     (Build Phases → Copy Bundle Resources)
+   - `../macos/Resources/pali-data.json`, `dpd-dict.json`, `freq-words.json`,
+     `compounds.json`, `bigram.json` (Build Phases → Copy Bundle Resources)
 4. Use this folder's `Info.plist` (or merge its `NSExtension` block).
 5. Run on a device/simulator, then **Settings → General → Keyboard → Keyboards
    → Add New Keyboard → Pali**, and switch to it with the globe.

@@ -16,7 +16,8 @@ fun main() {
     val dpd = File("app/src/main/assets/dpd-dict.json").readText()
     val freq = File("app/src/main/assets/freq-words.json").readText()
     val comp = File("app/src/main/assets/compounds.json").readText()
-    val pd = PaliData.fromJson(pali, dpd, freq, comp)
+    val big = File("app/src/main/assets/bigram.json").readText()
+    val pd = PaliData.fromJson(pali, dpd, freq, comp, big)
 
     // gloss lookup
     check(pd.lookup("buddha")?.zh == "佛；觉者", "gloss buddha")
@@ -51,6 +52,13 @@ fun main() {
     check(pd.completeWord("nibb", 6).any { it.first == "nibbāna" }, "completeWord nibb -> nibbāna")
     check(pd.completeWord("dhamma", 6).none { it.first == "dhamma" }, "completeWord skips exact")
     check(pd.completeWord("", 6).isEmpty(), "completeWord empty prefix")
+
+    // next-word prediction (bigram)
+    check(pd.nextWord("buddhaṃ").any { it.first == "saraṇaṃ" }, "nextWord buddhaṃ -> saraṇaṃ")
+    check(pd.nextWord("namo").any { it.first == "tassa" }, "nextWord namo -> tassa")
+    check(pd.nextWord("dhammaṃ").any { it.first == "deseti" }, "nextWord dhammaṃ -> deseti")
+    check(pd.nextWord("saṅghaṃ").isNotEmpty(), "nextWord saṅghaṃ non-empty")
+    check(pd.nextWord("zzznotaword").isEmpty(), "nextWord unknown -> none")
 
     println("\n$pass passed, $fail failed")
     exitProcess(if (fail == 0) 0 else 1)

@@ -16,7 +16,8 @@ final class KeyboardViewController: UIInputViewController {
     private var insertedLen = 0           // graphemes of converted text currently in the field
     private var script: PaliScript = .roman
     private var smartNasal = true
-    private let data = PaliData.shared    // loads bundled pali-data.json + dpd-dict.json
+    private var lastWord = ""             // IAST of the last committed word (for next-word)
+    private let data = PaliData.shared    // loads bundled pali-data.json + dpd-dict.json + bigram.json
 
     private let suggestion = UILabel()
     private var scriptButton: UIButton?
@@ -135,16 +136,18 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func onSpace() {
-        if buffer.isEmpty { textDocumentProxy.insertText(" "); return }
+        if buffer.isEmpty { textDocumentProxy.insertText(" "); dismissNextWord(); return }
+        let iast = PaliEngine.transliterate(buffer, script: .roman, smartNasal: smartNasal)
         textDocumentProxy.insertText(" ")   // converted word already in the field
-        buffer = ""; insertedLen = 0; refresh()
+        buffer = ""; insertedLen = 0
+        showNextWord(after: iast)           // predict what comes next
     }
     private func onReturn() {
         if !buffer.isEmpty { buffer = ""; insertedLen = 0; refresh() }
-        else { textDocumentProxy.insertText("\n") }
+        else { textDocumentProxy.insertText("\n"); dismissNextWord() }
     }
     private func onDelete() {
-        if buffer.isEmpty { textDocumentProxy.deleteBackward(); return }
+        if buffer.isEmpty { textDocumentProxy.deleteBackward(); dismissNextWord(); return }
         buffer.removeLast()
         replaceInserted()
     }
@@ -170,10 +173,53 @@ final class KeyboardViewController: UIInputViewController {
             completionStack.addArrangedSubview(b)
         }
     }
-    // The engine accepts IAST input directly, so set the buffer to the lemma.
+    // Pick a completion: replace the composed text with the whole word, commit
+    // it + a space, then predict the next word (chains like macOS).
     private func acceptCompletion(_ lemma: String) {
+        let proxy = textDocumentProxy
+        for _ in 0..<insertedLen { proxy.deleteBackward() }
         buffer = lemma
-        replaceInserted()
+        let out = converted
+        proxy.insertText(out + " ")
+        let iast = PaliEngine.transliterate(buffer, script: .roman, smartNasal: smartNasal)
+        buffer = ""; insertedLen = 0
+        showNextWord(after: iast)
+    }
+
+    // MARK: next-word prediction (bigram from the Pali canon)
+    // After a word is committed/picked, fill the strip with likely successors
+    // and keep the entered word + its gloss visible in the suggestion bar.
+    private func showNextWord(after word: String) {
+        lastWord = word
+        completionStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        guard let d = data else { suggestion.text = scriptLabel(); return }
+        let preds = d.nextWord(word)
+        for c in preds {
+            let b = UIButton(type: .system)
+            var cfg = UIButton.Configuration.tinted()   // tinted to distinguish from gray completions
+            cfg.title = PaliEngine.transliterate(c.w, script: script, smartNasal: false)
+            cfg.buttonSize = .small
+            b.configuration = cfg
+            b.addAction(UIAction { [weak self] _ in self?.acceptNextWord(c.w) }, for: .touchUpInside)
+            completionStack.addArrangedSubview(b)
+        }
+        let out = PaliEngine.transliterate(word, script: script, smartNasal: false)
+        if let g = d.lookup(word) {
+            let zh = g.zh.isEmpty ? "" : " · \(g.zh)"
+            suggestion.text = "\(out)    \(g.en)\(zh)"
+        } else {
+            suggestion.text = preds.isEmpty ? scriptLabel() : out
+        }
+    }
+    private func acceptNextWord(_ word: String) {
+        let out = PaliEngine.transliterate(word, script: script, smartNasal: false)
+        textDocumentProxy.insertText(out + " ")
+        showNextWord(after: word)
+    }
+    private func dismissNextWord() {
+        lastWord = ""
+        completionStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        suggestion.text = scriptLabel()
     }
 
     private func refresh() {

@@ -16,6 +16,7 @@ const rootHintsEl = $('rootHints');
 const affixHintsEl = $('affixHints');
 const analysisEl = $('analysis');
 const completionsEl = $('completions');
+const nextWordEl = $('nextWord');
 
 // Frequency-ranked word list for completion — lazy-loaded (~366 KB) on first use.
 let freqWords = null;
@@ -27,6 +28,19 @@ function ensureFreqWords() {
     .then((r) => r.json())
     .then((d) => { freqWords = d; render(); })
     .catch(() => { freqLoading = false; });
+}
+
+// Bigram model (next-word) from the Pali canon — lazy-loaded (~2.6 MB, ~0.8 MB
+// gzipped) on first use.
+let bigram = null;
+let bigramLoading = false;
+function ensureBigram() {
+  if (bigram || bigramLoading) return;
+  bigramLoading = true;
+  fetch('bigram.json')
+    .then((r) => r.json())
+    .then((d) => { bigram = d; render(); })
+    .catch(() => { bigramLoading = false; });
 }
 
 // Compound (samāsa) split map — lazy-loaded (~1 MB, ~300 KB gzipped) on first use.
@@ -67,6 +81,14 @@ function appendToInput(s) {
 function currentWord() {
   const m = input.value.match(/(\S*)$/);
   return m ? m[1] : '';
+}
+// The last *completed* word — only at a word boundary (input ends with
+// whitespace), so next-word predictions don't fight with completions.
+function prevWord() {
+  const v = input.value;
+  if (v && !/\s$/.test(v)) return '';
+  const toks = v.split(/\s+/).filter(Boolean);
+  return toks.length ? toks[toks.length - 1] : '';
 }
 
 // Short lang codes drive the script-specific @font-face rules in CSS.
@@ -206,6 +228,26 @@ function renderCompletions(word) {
     : '<span class="h-empty">无补全</span>';
 }
 
+// Next-word predictions (bigram) for the last completed word. Clicking a chip
+// appends that word + a space, so predictions chain.
+function renderNextWord() {
+  const raw = prevWord();
+  if (!raw) { nextWordEl.innerHTML = '<span class="h-empty">先输入一个词加空格…</span>'; return; }
+  ensureBigram();
+  if (!bigram) { nextWordEl.innerHTML = '<span class="h-empty">加载语料…</span>'; return; }
+  const iast = normWord(raw).toLowerCase();
+  const succ = Predict.nextWord(iast, bigram, 8);
+  nextWordEl.innerHTML = succ.length
+    ? succ
+        .map((w) => {
+          const g = Glossary.lookup(w);
+          const gloss = g ? ` <span class="h-gloss">${glossPair(g.en, g.zh)}</span>` : '';
+          return `<button class="h-chip" data-append="${escapeHtml(iastToInput(w) + ' ')}" title="点选追加">${escapeHtml(w)}${gloss}</button>`;
+        })
+        .join('')
+    : '<span class="h-empty">无预测</span>';
+}
+
 // Render the morphological split (prefix + root/word + ending) of a word.
 function renderAnalysis(word) {
   if (!word) {
@@ -238,6 +280,7 @@ function renderPredict() {
   const pre = Predict.toAkk(word);
 
   renderCompletions(word);
+  renderNextWord();
   renderAnalysis(word);
 
   // Next sounds — clickable, append the typed form of that akkhara.
@@ -381,6 +424,11 @@ function fillHandler(e) {
 rootHintsEl.addEventListener('click', fillHandler);
 affixHintsEl.addEventListener('click', fillHandler);
 completionsEl.addEventListener('click', fillHandler);
+// Next-word chips append (and chain) rather than replace the current word.
+nextWordEl.addEventListener('click', (e) => {
+  const chip = e.target.closest('.h-chip');
+  if (chip) appendToInput(chip.dataset.append);
+});
 
 $('clearBtn').addEventListener('click', () => {
   input.value = '';

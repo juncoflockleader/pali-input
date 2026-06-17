@@ -264,5 +264,18 @@ function resolve(w) {
   assert(JSON.stringify(P.splitCompound('satipaṭṭhānaṃ', CMP)) === JSON.stringify(['sati', 'upaṭṭhāna']), 'split strips trailing ṃ');
 }
 
+// --- Next-word prediction (bigram) ------------------------------------------
+{
+  const BG = require('./bigram.json');
+  const nw = (w) => P.nextWord(w, BG, 5);
+  assert(nw('buddhaṃ').includes('saraṇaṃ'), 'nextWord buddhaṃ -> saraṇaṃ');
+  assert(nw('namo').includes('tassa'), 'nextWord namo -> tassa');
+  assert(nw('dhammaṃ').includes('deseti'), 'nextWord dhammaṃ -> deseti');
+  assert(nw('saṅghaṃ').length > 0, 'nextWord saṅghaṃ -> non-empty');
+  assert(P.nextWord('buddhaṃ', { buddha: ['x'] }, 5).includes('x'), 'nextWord strips trailing ṃ to find a head');
+  assert(P.nextWord('zzznotaword', BG).length === 0, 'nextWord unknown -> none');
+  assert(P.nextWord('buddhaṃ', null).length === 0, 'nextWord no map -> none');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
