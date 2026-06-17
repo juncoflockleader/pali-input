@@ -48,11 +48,15 @@ Type the **pronunciation** of Pali in plain ASCII and get proper Pali script.
   Gatekeeper 拦截,在「系统设置 → 隐私与安全性」点「仍要打开」。
 - **Android** — `PaliIME-v1.1.0.apk`(debug 签名,可 sideload)。手机允许「安装未知来源应用」后
   安装,再在「设置 → 系统 → 语言和输入法」启用 Pali 键盘。
+- **Keyman**(Windows / macOS / Linux,经 Keyman app 亦支持 web/移动)—
+  `PaliIME-keyman-v1.1.0.kmp`,一个包内含全部 5 个键盘。装免费的
+  [Keyman](https://keyman.com) app 后打开该 `.kmp` 即可。
 - **网页 / PWA** — 无需下载,直接用[在线版](https://juncoflockleader.github.io/pali-input/),
   可「添加到主屏幕 / 安装为应用」离线使用。
 - **iOS** — 受苹果限制,无法直接分发安装包;请用网页 PWA,或用 Keyman 键盘。
 
-安装包由 [`.github/workflows/release.yml`](.github/workflows/release.yml) 在打 `v*` 标签时自动构建并上传。
+安装包由 [`.github/workflows/release.yml`](.github/workflows/release.yml) 在打 `v*` 标签时自动
+构建并上传——Android APK 与 macOS app 在云端构建,Keyman `.kmp` 也用 `kmc`(纯 Node,无需 Keyman GUI)在云端编译。
 
 ## 使用 · Usage
 

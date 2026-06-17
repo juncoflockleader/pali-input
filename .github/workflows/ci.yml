@@ -21,6 +21,14 @@ jobs:
         run: node desktop/keyman/build-native.cjs
       - name: Committed Keyman keyboards are up to date
         run: git diff --exit-code -- desktop/keyman/*.kmn
+      - name: Keyman keyboards — compile with kmc (real Keyman compiler)
+        working-directory: desktop/keyman
+        run: |
+          npm install -g @keymanapp/kmc@18.0.249
+          for k in pali pali-deva pali-sinh pali-thai pali-mymr; do
+            kmc --no-error-reporting build file "$k.kmn"
+          done
+          kmc --no-error-reporting build file pali.kps   # also builds pali.kmp
 
   swift:
     name: Swift engine/data + iOS type-check (macOS)

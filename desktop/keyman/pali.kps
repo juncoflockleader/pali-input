@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package>
+  <System>
+    <KeymanDeveloperVersion>18.0.249</KeymanDeveloperVersion>
+    <FileVersion>18.0</FileVersion>
+  </System>
+  <Info>
+    <Name>Pali Phonetic IME</Name>
+    <Copyright>© 2026 pali-input — code MIT</Copyright>
+    <Author>pali-input</Author>
+    <WebSite>https://github.com/juncoflockleader/pali-input</WebSite>
+    <Version>1.1.0</Version>
+  </Info>
+  <Files>
+    <File><Name>pali.kmx</Name><Description>Pali — Velthuis to IAST</Description><CopyLocation>0</CopyLocation><FileType>.kmx</FileType></File>
+    <File><Name>pali.js</Name><Description>Pali — Velthuis to IAST (web/touch)</Description><CopyLocation>0</CopyLocation><FileType>.js</FileType></File>
+    <File><Name>pali-deva.kmx</Name><Description>Pali — Devanāgarī</Description><CopyLocation>0</CopyLocation><FileType>.kmx</FileType></File>
+    <File><Name>pali-deva.js</Name><Description>Pali — Devanāgarī (web/touch)</Description><CopyLocation>0</CopyLocation><FileType>.js</FileType></File>
+    <File><Name>pali-sinh.kmx</Name><Description>Pali — Sinhala</Description><CopyLocation>0</CopyLocation><FileType>.kmx</FileType></File>
+    <File><Name>pali-sinh.js</Name><Description>Pali — Sinhala (web/touch)</Description><CopyLocation>0</CopyLocation><FileType>.js</FileType></File>
+    <File><Name>pali-thai.kmx</Name><Description>Pali — Thai</Description><CopyLocation>0</CopyLocation><FileType>.kmx</FileType></File>
+    <File><Name>pali-thai.js</Name><Description>Pali — Thai (web/touch)</Description><CopyLocation>0</CopyLocation><FileType>.js</FileType></File>
+    <File><Name>pali-mymr.kmx</Name><Description>Pali — Myanmar</Description><CopyLocation>0</CopyLocation><FileType>.kmx</FileType></File>
+    <File><Name>pali-mymr.js</Name><Description>Pali — Myanmar (web/touch)</Description><CopyLocation>0</CopyLocation><FileType>.js</FileType></File>
+  </Files>
+  <Keyboards>
+    <Keyboard><Name>Pali — Velthuis to IAST</Name><ID>pali</ID><Version>1.0</Version><Languages><Language ID="pi">Pali</Language></Languages></Keyboard>
+    <Keyboard><Name>Pali — Devanāgarī</Name><ID>pali-deva</ID><Version>1.0</Version><Languages><Language ID="pi">Pali</Language></Languages></Keyboard>
+    <Keyboard><Name>Pali — Sinhala</Name><ID>pali-sinh</ID><Version>1.0</Version><Languages><Language ID="pi">Pali</Language></Languages></Keyboard>
+    <Keyboard><Name>Pali — Thai</Name><ID>pali-thai</ID><Version>1.0</Version><Languages><Language ID="pi">Pali</Language></Languages></Keyboard>
+    <Keyboard><Name>Pali — Myanmar</Name><ID>pali-mymr</ID><Version>1.0</Version><Languages><Language ID="pi">Pali</Language></Languages></Keyboard>
+  </Keyboards>
+</Package>

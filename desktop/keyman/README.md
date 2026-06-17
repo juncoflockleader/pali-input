@@ -25,28 +25,31 @@ assimilation, niggahīta, and Thai leading-vowel reordering.
 node build-native.cjs        # regenerate the 4 native .kmn + run verification
 ```
 
-> ⚠️ **Verification status:** the rule *logic* is verified by the simulator, but
-> the `.kmn` have **not been compiled/run in real Keyman** here (no compiler in
-> this environment). Compile in Keyman Developer and smoke-test on-device before
-> distributing. The simulator targets documented Keyman semantics; any
-> divergence would surface as differences from these expected outputs.
+> **Verification status:** the rule *logic* is verified by the simulator, and
+> all five `.kmn` (plus the `pali.kps` package) are **compiled in CI by the real
+> Keyman compiler** — `kmc`, the cross-platform Node CLI — on every push (see
+> [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)). They have not
+> yet been smoke-tested on a real device, so do that before relying on them in
+> production.
 
 ## Compile
 
-Install [Keyman Developer](https://keyman.com/developer/) (Windows) or the
-cross-platform CLI, then:
+The compiler is `kmc`, distributed as the npm package
+[`@keymanapp/kmc`](https://www.npmjs.com/package/@keymanapp/kmc) — pure Node, no
+Windows/GUI needed (this is what CI uses). Build the keyboards and the package:
 
 ```bash
-kmc build pali.kmn          # IAST  -> pali.kmx (Windows/Linux), pali.js (web), ...
-kmc build pali-deva.kmn     # Devanāgarī
-kmc build pali-sinh.kmn     # Sinhala
-kmc build pali-thai.kmn     # Thai
-kmc build pali-mymr.kmn     # Myanmar
+cd desktop/keyman
+npm install -g @keymanapp/kmc
+for k in pali pali-deva pali-sinh pali-thai pali-mymr; do kmc build file "$k.kmn"; done
+kmc build file pali.kps     # -> pali.kmp (installable package of all 5 keyboards)
 ```
 
-Or open `pali.kmn` in Keyman Developer and press **Build**. To make a
-distributable installer, add a package (`.kps`) in Keyman Developer and build
-a `.kmp`, which users install via Keyman.
+Each keyboard compiles to `*.kmx` (Windows/macOS/Linux) + `*.js` (web/touch);
+`pali.kps` bundles all five into a single `pali.kmp`. The
+[release workflow](../../.github/workflows/release.yml) builds the `.kmp` and
+attaches it to each release as `PaliIME-keyman-<tag>.kmp`. (You can also open
+the keyboards in [Keyman Developer](https://keyman.com/developer/) and Build.)
 
 ## Install (Windows)
 

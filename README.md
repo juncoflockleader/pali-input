@@ -52,13 +52,18 @@ ships ready-to-install packages:
 - **Android** — `PaliIME-v1.1.0.apk` (debug-signed, sideloadable). Allow “install
   unknown apps”, install it, then enable the Pali keyboard under Settings → System →
   Languages & input.
+- **Keyman** (Windows / macOS / Linux, + web/mobile via the Keyman app) —
+  `PaliIME-keyman-v1.1.0.kmp`, one package with all 5 keyboards. Install the free
+  [Keyman](https://keyman.com) app, then open the `.kmp`.
 - **Web / PWA** — nothing to download: use the [live version](https://juncoflockleader.github.io/pali-input/)
   and “Add to Home Screen / Install as app” for offline use.
-- **iOS** — Apple does not allow self-hosted installs; use the web PWA or a Keyman
+- **iOS** — Apple does not allow self-hosted installs; use the web PWA or the Keyman
   keyboard instead.
 
 Packages are built and uploaded automatically by
-[`.github/workflows/release.yml`](.github/workflows/release.yml) when a `v*` tag is pushed.
+[`.github/workflows/release.yml`](.github/workflows/release.yml) when a `v*` tag is
+pushed — the Android APK + macOS app build on cloud runners, and the Keyman `.kmp`
+compiles there too with `kmc` (pure Node, no Keyman GUI).
 
 ## Usage (web)
 

@@ -68,3 +68,27 @@ jobs:
           TAG="${{ github.event.inputs.tag || github.ref_name }}"
           ditto -c -k --keepParent desktop/macos/build/PaliIME.app "PaliIME-macOS-${TAG}.zip"
           gh release upload "$TAG" "PaliIME-macOS-${TAG}.zip" --clobber
+
+  keyman-kmp:
+    name: Keyman package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build Keyman .kmp (kmc, pure Node)
+        working-directory: desktop/keyman
+        run: |
+          npm install -g @keymanapp/kmc@18.0.249
+          for k in pali pali-deva pali-sinh pali-thai pali-mymr; do
+            kmc --no-error-reporting build file "$k.kmn"
+          done
+          kmc --no-error-reporting build file pali.kps
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          cp desktop/keyman/pali.kmp "PaliIME-keyman-${TAG}.kmp"
+          gh release upload "$TAG" "PaliIME-keyman-${TAG}.kmp" --clobber
